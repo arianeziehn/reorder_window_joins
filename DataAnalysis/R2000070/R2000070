@@ -1,0 +1,13 @@
+qnv <- read.csv(file = '/home/zarijane/IdeaProjects/ROC_test/src/main/resources/QnV_R2000070.csv')
+length(unique(qnv[,1]))
+% [1] 1 : number of sensors
+% time: 5 month, 212.326 tuple (event time 1.12.18-30.04.19)
+% area: 7.7754736 - 10.200393  && 49.521824 - 51.650837
+
+boxplot(qnv[,4], main="Distribution Quantity")
+> dev.copy(jpeg,filename="quaQnV_70.jpg")
+> dev.off()
+
+boxplot(qnv[,3], main="Distribution Vel")
+> dev.copy(jpeg,filename="velQnV_73.jpg")
+> dev.off()
