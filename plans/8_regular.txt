@@ -1,0 +1,2 @@
+Query Execution Diagram:
+(((((((Title.id ⋈ Cast_Info.movie_id) ⋈ Name.person_id) ⋈ Kind_Type.id) ⋈ Role_Type.role_id) ⋈ Movie_Info.movie_id) ⋈ Info_Type.info_type_id) ⋈ Movie_Companies.movie_id) ⋈ Company_Name.company_id) ⋈ Company_Type.company_type_id

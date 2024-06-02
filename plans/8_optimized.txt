@@ -1,0 +1,6 @@
+Query Execution Diagram:
+(((((((Title.id ⋈ Movie_Companies.movie_id) ⋈ Kind_Type.id) ⋈ Cast_Info.movie_id) ⋈ Name.person_id) ⋈ Cast_Info.role_id) ⋈ Role_Type.id) ⋈ Company_Name.id) ⋈ Company_Type.id)
+
+Execution Details:
+- Planning Time: 29 ms
+- Execution Time: 29486 ms

@@ -1,0 +1,6 @@
+Query Execution Diagram:
+(Title.kind_id ⋈ Kind_Type.id)
+
+Execution Details:
+- Planning Time: 10 ms
+- Execution Time: 225 ms

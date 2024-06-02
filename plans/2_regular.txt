@@ -1,0 +1,2 @@
+Query Execution Diagram:
+((Title.id ⋈ Cast_Info.movie_id) ⋈ Name.person_id)

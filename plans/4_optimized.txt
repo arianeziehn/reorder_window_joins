@@ -1,0 +1,6 @@
+Query Execution Diagram:
+(((Title.id ⋈ Cast_Info.movie_id) ⋈ Name.person_id) ⋈ (Cast_Info.role_id ⋈ Role_Type.id))
+
+Execution Details:
+- Planning Time: 7 ms
+- Execution Time: 17330 ms
