@@ -48,7 +48,7 @@ public class IntervalJoin3wayABC {
         DataStream<KeyedDataPointGeneral> inputQnV = env.addSource(new KeyedDataPointParallelSourceFunction(file, sensors, ",", throughput))
                 .assignTimestampsAndWatermarks(new UDFs.ExtractTimestamp(60000));
 
-        DataStream<KeyedDataPointGeneral> inputPM = env.addSource(new KeyedDataPointParallelSourceFunction(filePM, sensors, ";", throughput))
+        DataStream<KeyedDataPointGeneral> inputPM = env.addSource(new KeyedDataPointParallelSourceFunction(filePM, sensors, ",", throughput))
                 .assignTimestampsAndWatermarks(new UDFs.ExtractTimestamp(180000));
 
         inputQnV.flatMap(new ThroughputLogger<KeyedDataPointGeneral>(KeyedDataPointParallelSourceFunction.RECORD_SIZE_IN_BYTE, throughput));
@@ -98,7 +98,7 @@ public class IntervalJoin3wayABC {
 
         seq3.flatMap(new LatencyLoggerT3());
         seq3//.print();
-                .writeAsText(outputPath, FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+                .writeAsText(outputPath, FileSystem.WriteMode.OVERWRITE); //.setParallelism(1);
 
         //System.out.println(env.getExecutionPlan());
         JobExecutionResult executionResult = env.execute("My Flink Job");

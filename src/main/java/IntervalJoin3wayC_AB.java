@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
  *--inputQnV ./src/main/resources/QnV_R2000070.csv --inputPM ./src/main/resources/luftdaten_11245.csv
  */
 
-public class IntervalJoin3wayACB {
+public class IntervalJoin3wayC_AB {
     public static void main(String[] args) throws Exception {
 
         final ParameterTool parameters = ParameterTool.fromArgs(args);
@@ -37,7 +37,7 @@ public class IntervalJoin3wayACB {
 
         String outputPath;
         if (!parameters.has("output")) {
-            outputPath = file.replace(".csv", "_resultIVJ3ACB.csv");
+            outputPath = file.replace(".csv", "_resultIVJ3C_AB.csv");
         } else {
             outputPath = parameters.get("output");
         }
@@ -68,7 +68,7 @@ public class IntervalJoin3wayACB {
 
         DataStream<Tuple3<KeyedDataPointGeneral, KeyedDataPointGeneral, Long>> seq2 = velStream
                 .keyBy(KeyedDataPointGeneral::getKey)
-                .intervalJoin(pm10Stream.keyBy(KeyedDataPointGeneral::getKey))
+                .intervalJoin(quaStream.keyBy(KeyedDataPointGeneral::getKey))
                 .between(Time.minutes(-windowSize), Time.minutes(windowSize))
                 .lowerBoundExclusive()
                 .upperBoundExclusive()
@@ -82,17 +82,17 @@ public class IntervalJoin3wayACB {
                 })
                 .assignTimestampsAndWatermarks(new UDFs.ExtractTimestamp2KeyedDataPointGeneralLong(60000));
 
-        DataStream<Tuple3<KeyedDataPointGeneral, KeyedDataPointGeneral, KeyedDataPointGeneral>> seq3 = seq2
-                .keyBy(new UDFs.getKeyT3())
-                .intervalJoin(quaStream.keyBy(KeyedDataPointGeneral::getKey))
+        DataStream<Tuple3<KeyedDataPointGeneral, KeyedDataPointGeneral, KeyedDataPointGeneral>> seq3 = pm10Stream
+                .keyBy(KeyedDataPointGeneral::getKey)
+                .intervalJoin(seq2.keyBy(new UDFs.getKeyT3()))
                 .between(Time.minutes(-windowSize), Time.minutes(windowSize))
                 .lowerBoundExclusive()
                 .upperBoundExclusive()
-                .process(new ProcessJoinFunction<Tuple3<KeyedDataPointGeneral, KeyedDataPointGeneral, Long>, KeyedDataPointGeneral, Tuple3<KeyedDataPointGeneral, KeyedDataPointGeneral, KeyedDataPointGeneral>>() {
+                .process(new ProcessJoinFunction<KeyedDataPointGeneral, Tuple3<KeyedDataPointGeneral, KeyedDataPointGeneral, Long>, Tuple3<KeyedDataPointGeneral, KeyedDataPointGeneral, KeyedDataPointGeneral>>() {
                     @Override
-                    public void processElement(Tuple3<KeyedDataPointGeneral, KeyedDataPointGeneral, Long> d1, KeyedDataPointGeneral d2, ProcessJoinFunction<Tuple3<KeyedDataPointGeneral, KeyedDataPointGeneral, Long>, KeyedDataPointGeneral, Tuple3<KeyedDataPointGeneral, KeyedDataPointGeneral, KeyedDataPointGeneral>>.Context context, Collector<Tuple3<KeyedDataPointGeneral, KeyedDataPointGeneral, KeyedDataPointGeneral>> collector) throws Exception {
+                    public void processElement( KeyedDataPointGeneral d2, Tuple3<KeyedDataPointGeneral, KeyedDataPointGeneral, Long> d1, ProcessJoinFunction<KeyedDataPointGeneral, Tuple3<KeyedDataPointGeneral, KeyedDataPointGeneral, Long>, Tuple3<KeyedDataPointGeneral, KeyedDataPointGeneral, KeyedDataPointGeneral>>.Context context, Collector<Tuple3<KeyedDataPointGeneral, KeyedDataPointGeneral, KeyedDataPointGeneral>> collector) throws Exception {
 
-                            collector.collect(new Tuple3<>(d1.f0, d2, d1.f1));
+                            collector.collect(new Tuple3<>(d1.f0, d1.f1, d2));
                     }
                 });
 

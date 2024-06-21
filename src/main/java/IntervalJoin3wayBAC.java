@@ -77,7 +77,7 @@ public class IntervalJoin3wayBAC {
                     @Override
                     public void processElement(KeyedDataPointGeneral d1, KeyedDataPointGeneral d2, ProcessJoinFunction<KeyedDataPointGeneral, KeyedDataPointGeneral, Tuple3<KeyedDataPointGeneral, KeyedDataPointGeneral, Long>>.Context context, Collector<Tuple3<KeyedDataPointGeneral, KeyedDataPointGeneral, Long>> collector) throws Exception {
 
-                            collector.collect(new Tuple3<>(d1, d2, d2.getTimeStampMs()));
+                            collector.collect(new Tuple3<>(d2, d1, d2.getTimeStampMs()));
                     }
                 })
                 .assignTimestampsAndWatermarks(new UDFs.ExtractTimestamp2KeyedDataPointGeneralLong(60000));

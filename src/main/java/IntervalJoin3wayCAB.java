@@ -48,7 +48,7 @@ public class IntervalJoin3wayCAB {
         DataStream<KeyedDataPointGeneral> inputQnV = env.addSource(new KeyedDataPointParallelSourceFunction(file, sensors, ",", throughput))
                 .assignTimestampsAndWatermarks(new UDFs.ExtractTimestamp(60000));
 
-        DataStream<KeyedDataPointGeneral> inputPM = env.addSource(new KeyedDataPointParallelSourceFunction(filePM, sensors, ";", throughput))
+        DataStream<KeyedDataPointGeneral> inputPM = env.addSource(new KeyedDataPointParallelSourceFunction(filePM, sensors, ",", throughput))
                 .assignTimestampsAndWatermarks(new UDFs.ExtractTimestamp(180000));
 
         inputQnV.flatMap(new ThroughputLogger<KeyedDataPointGeneral>(KeyedDataPointParallelSourceFunction.RECORD_SIZE_IN_BYTE, throughput));
@@ -77,7 +77,7 @@ public class IntervalJoin3wayCAB {
                     @Override
                     public void processElement(KeyedDataPointGeneral d1, KeyedDataPointGeneral d2, ProcessJoinFunction<KeyedDataPointGeneral, KeyedDataPointGeneral, Tuple3<KeyedDataPointGeneral, KeyedDataPointGeneral, Long>>.Context context, Collector<Tuple3<KeyedDataPointGeneral, KeyedDataPointGeneral, Long>> collector) throws Exception {
 
-                            collector.collect(new Tuple3<>(d1, d2, d2.getTimeStampMs()));
+                            collector.collect(new Tuple3<>(d2, d1, d2.getTimeStampMs()));
                     }
                 })
                 .assignTimestampsAndWatermarks(new UDFs.ExtractTimestamp2KeyedDataPointGeneralLong(60000));
@@ -92,13 +92,13 @@ public class IntervalJoin3wayCAB {
                     @Override
                     public void processElement(Tuple3<KeyedDataPointGeneral, KeyedDataPointGeneral, Long> d1, KeyedDataPointGeneral d2, ProcessJoinFunction<Tuple3<KeyedDataPointGeneral, KeyedDataPointGeneral, Long>, KeyedDataPointGeneral, Tuple3<KeyedDataPointGeneral, KeyedDataPointGeneral, KeyedDataPointGeneral>>.Context context, Collector<Tuple3<KeyedDataPointGeneral, KeyedDataPointGeneral, KeyedDataPointGeneral>> collector) throws Exception {
 
-                            collector.collect(new Tuple3<>(d1.f0, d1.f1, d2));
+                            collector.collect(new Tuple3<>(d1.f0, d2, d1.f1));
                     }
                 });
 
         seq3.flatMap(new LatencyLoggerT3());
         seq3//.print();
-                .writeAsText(outputPath, FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+                .writeAsText(outputPath, FileSystem.WriteMode.OVERWRITE);//.setParallelism(1);
 
         //System.out.println(env.getExecutionPlan());
         JobExecutionResult executionResult = env.execute("My Flink Job");
