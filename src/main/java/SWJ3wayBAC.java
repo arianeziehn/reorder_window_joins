@@ -50,7 +50,7 @@ public class SWJ3wayBAC {
         DataStream<KeyedDataPointGeneral> inputQnV = env.addSource(new KeyedDataPointParallelSourceFunction(file, sensors, ",", throughput))
                 .assignTimestampsAndWatermarks(new UDFs.ExtractTimestamp(60000));
 
-        DataStream<KeyedDataPointGeneral> inputPM = env.addSource(new KeyedDataPointParallelSourceFunction(filePM, sensors, ";", throughput))
+        DataStream<KeyedDataPointGeneral> inputPM = env.addSource(new KeyedDataPointParallelSourceFunction(filePM, sensors, ",", throughput))
                 .assignTimestampsAndWatermarks(new UDFs.ExtractTimestamp(180000));
 
         inputQnV.flatMap(new ThroughputLogger<KeyedDataPointGeneral>(KeyedDataPointParallelSourceFunction.RECORD_SIZE_IN_BYTE, throughput));
@@ -77,7 +77,7 @@ public class SWJ3wayBAC {
                     @Override
                     public void join(KeyedDataPointGeneral d1, KeyedDataPointGeneral d2, Collector<Tuple3<KeyedDataPointGeneral, KeyedDataPointGeneral, Long>> collector) throws Exception {
 
-                            Tuple3<KeyedDataPointGeneral, KeyedDataPointGeneral, Long> result = new Tuple3<>(d1, d2, d2.getTimeStampMs());
+                            Tuple3<KeyedDataPointGeneral, KeyedDataPointGeneral, Long> result = new Tuple3<>(d2, d1, d2.getTimeStampMs());
                            /** if (!set.contains(result)) {
                                 if (set.size() == 1000) {
                                     set.removeAll(set);
@@ -110,7 +110,7 @@ public class SWJ3wayBAC {
 
        // seq3.flatMap(new LatencyLoggerT3());
         seq3//.print();
-                .writeAsText(outputPath, FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+                .writeAsText(outputPath, FileSystem.WriteMode.OVERWRITE); //.setParallelism(1);
 
         //System.out.println(env.getExecutionPlan());
         JobExecutionResult executionResult = env.execute("My Flink Job");

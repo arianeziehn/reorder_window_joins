@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
  *--input ./src/main/resources/QnV_R2000070.csv
  */
 
-public class SWJ3wayABC {
+public class SWJ3wayB_CA {
     public static void main(String[] args) throws Exception {
 
         final ParameterTool parameters = ParameterTool.fromArgs(args);
@@ -39,7 +39,7 @@ public class SWJ3wayABC {
 
         String outputPath;
         if (!parameters.has("output")) {
-            outputPath = file.replace(".csv", "_resultSWJ_ABC.csv");
+            outputPath = file.replace(".csv", "_resultSWJ_B_CA.csv");
         } else {
             outputPath = parameters.get("output");
         }
@@ -68,7 +68,7 @@ public class SWJ3wayABC {
                 .filter(t -> ((Double) t.getValue()) > pm10Filter && t instanceof PartMatter10Event);
 
 
-        DataStream<Tuple3<KeyedDataPointGeneral, KeyedDataPointGeneral, Long>> seq2 = velStream.join(quaStream)
+        DataStream<Tuple3<KeyedDataPointGeneral, KeyedDataPointGeneral, Long>> seq2 = pm10Stream.join(velStream)
                 .where(KeyedDataPointGeneral::getKey)
                 .equalTo(KeyedDataPointGeneral::getKey)
                 .window(SlidingEventTimeWindows.of(Time.minutes(windowSize), Time.minutes(slideSize)))
@@ -77,7 +77,7 @@ public class SWJ3wayABC {
                     @Override
                     public void join(KeyedDataPointGeneral d1, KeyedDataPointGeneral d2, Collector<Tuple3<KeyedDataPointGeneral, KeyedDataPointGeneral, Long>> collector) throws Exception {
 
-                            Tuple3<KeyedDataPointGeneral, KeyedDataPointGeneral, Long> result = new Tuple3<>(d1, d2, d1.getTimeStampMs());
+                            Tuple3<KeyedDataPointGeneral, KeyedDataPointGeneral, Long> result = new Tuple3<>(d2, d1, d2.getTimeStampMs());
                            /** if (!set.contains(result)) {
                                 if (set.size() == 1000) {
                                     set.removeAll(set);
@@ -90,16 +90,16 @@ public class SWJ3wayABC {
                     }
                 }) .assignTimestampsAndWatermarks(new UDFs.ExtractTimestamp2KeyedDataPointGeneralLong(60000));
 
-        DataStream<Tuple3<KeyedDataPointGeneral, KeyedDataPointGeneral, KeyedDataPointGeneral>> seq3 = seq2.join(pm10Stream)
-                .where(new UDFs.getKeyT3())
-                .equalTo(KeyedDataPointGeneral::getKey)
+        DataStream<Tuple3<KeyedDataPointGeneral, KeyedDataPointGeneral, KeyedDataPointGeneral>> seq3 = quaStream.join(seq2)
+                .where(KeyedDataPointGeneral::getKey)
+                .equalTo(new UDFs.getKeyT3())
                 .window(SlidingEventTimeWindows.of(Time.minutes(windowSize), Time.minutes(slideSize)))
-                .apply(new FlatJoinFunction<Tuple3<KeyedDataPointGeneral, KeyedDataPointGeneral, Long>, KeyedDataPointGeneral, Tuple3<KeyedDataPointGeneral, KeyedDataPointGeneral, KeyedDataPointGeneral>>() {
+                .apply(new FlatJoinFunction< KeyedDataPointGeneral, Tuple3<KeyedDataPointGeneral, KeyedDataPointGeneral, Long>, Tuple3<KeyedDataPointGeneral, KeyedDataPointGeneral, KeyedDataPointGeneral>>() {
                    // final HashSet<Tuple3<KeyedDataPointGeneral, KeyedDataPointGeneral, KeyedDataPointGeneral>> set = new HashSet<Tuple3<KeyedDataPointGeneral, KeyedDataPointGeneral, KeyedDataPointGeneral>>();
                     @Override
-                    public void join(Tuple3<KeyedDataPointGeneral, KeyedDataPointGeneral, Long> d1, KeyedDataPointGeneral d2, Collector<Tuple3<KeyedDataPointGeneral, KeyedDataPointGeneral, KeyedDataPointGeneral>> collector) throws Exception {
+                    public void join( KeyedDataPointGeneral d2, Tuple3<KeyedDataPointGeneral, KeyedDataPointGeneral, Long> d1, Collector<Tuple3<KeyedDataPointGeneral, KeyedDataPointGeneral, KeyedDataPointGeneral>> collector) throws Exception {
 
-                            Tuple3<KeyedDataPointGeneral, KeyedDataPointGeneral, KeyedDataPointGeneral> result = new Tuple3<>(d1.f0, d1.f1, d2);
+                            Tuple3<KeyedDataPointGeneral, KeyedDataPointGeneral, KeyedDataPointGeneral> result = new Tuple3<>(d1.f0, d2, d1.f1);
 
                                 collector.collect(result);
                                // set.add(result);
@@ -110,7 +110,7 @@ public class SWJ3wayABC {
 
        // seq3.flatMap(new LatencyLoggerT3());
         seq3//.print();
-                .writeAsText(outputPath, FileSystem.WriteMode.OVERWRITE); //.setParallelism(1);
+                .writeAsText(outputPath, FileSystem.WriteMode.OVERWRITE);//.setParallelism(1);
 
         //System.out.println(env.getExecutionPlan());
         JobExecutionResult executionResult = env.execute("My Flink Job");

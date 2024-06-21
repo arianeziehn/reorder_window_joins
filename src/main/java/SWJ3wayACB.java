@@ -39,7 +39,7 @@ public class SWJ3wayACB {
 
         String outputPath;
         if (!parameters.has("output")) {
-            outputPath = file.replace(".csv", "_resultSWJ_ABC.csv");
+            outputPath = file.replace(".csv", "_resultSWJ_ACB.csv");
         } else {
             outputPath = parameters.get("output");
         }
@@ -99,7 +99,7 @@ public class SWJ3wayACB {
                     @Override
                     public void join(Tuple3<KeyedDataPointGeneral, KeyedDataPointGeneral, Long> d1, KeyedDataPointGeneral d2, Collector<Tuple3<KeyedDataPointGeneral, KeyedDataPointGeneral, KeyedDataPointGeneral>> collector) throws Exception {
 
-                            Tuple3<KeyedDataPointGeneral, KeyedDataPointGeneral, KeyedDataPointGeneral> result = new Tuple3<>(d1.f0, d1.f1, d2);
+                            Tuple3<KeyedDataPointGeneral, KeyedDataPointGeneral, KeyedDataPointGeneral> result = new Tuple3<>(d1.f0, d2, d1.f1);
 
                                 collector.collect(result);
                                // set.add(result);
