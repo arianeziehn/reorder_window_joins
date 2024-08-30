@@ -1,42 +1,40 @@
-package util;
+package oldStuff_delete;
 
 import com.esotericsoftware.minlog.Log;
-import oldStuff_delete.KeyedDataPointGeneral;
 import org.apache.flink.api.common.functions.RichFlatMapFunction;
-import org.apache.flink.api.java.tuple.Tuple9;
+import org.apache.flink.api.java.tuple.Tuple6;
 import org.apache.flink.util.Collector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This class logs the latency as average of all result tuples (Tuple9 of KeyedDataPoints) received within a second
- * TODO
+ * This class logs the latency as average of all result tuples (Tuple6 of KeyedDataPoints) received within a second
  */
 
-public class LatencyLoggerT9 extends RichFlatMapFunction<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>, Integer> {
+public class LatencyLoggerT6 extends RichFlatMapFunction<Tuple6<KeyedDataPointGeneral, KeyedDataPointGeneral, KeyedDataPointGeneral, KeyedDataPointGeneral, KeyedDataPointGeneral, KeyedDataPointGeneral>, Integer> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(LatencyLoggerT9.class);
+    private static final Logger LOG = LoggerFactory.getLogger(LatencyLoggerT6.class);
     private long totalLatencySum = 0;
     private long matchedPatternsCount = 0;
     private long lastLogTimeMs = -1;
     private boolean logPerTuple = false; //enables logging per tuple
 
-    public LatencyLoggerT9() {
+    public LatencyLoggerT6() {
     }
 
-    public LatencyLoggerT9(boolean logPerTuple) {
+    public LatencyLoggerT6(boolean logPerTuple) {
         this.logPerTuple = logPerTuple;
     }
 
     @Override
-    public void flatMap(Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long> dp, Collector<Integer> collector) throws Exception {
-        Long last_timestamp = dp.f8;
-        log_latency(last_timestamp);
+    public void flatMap(Tuple6<KeyedDataPointGeneral, KeyedDataPointGeneral, KeyedDataPointGeneral, KeyedDataPointGeneral, KeyedDataPointGeneral, KeyedDataPointGeneral> dp, Collector<Integer> collector) throws Exception {
+        KeyedDataPointGeneral dp_last = dp.f5;
+        log_latency(dp_last);
     }
 
-    public void log_latency(long last_timestamp) {
+    public void log_latency(KeyedDataPointGeneral last) {
         long currentTime = System.currentTimeMillis();
-        long detectionLatency = currentTime - last_timestamp;
+        long detectionLatency = currentTime - last.getCreationTime(); //named ingestion-time in report
 
         this.totalLatencySum += detectionLatency;
         this.matchedPatternsCount += 1;

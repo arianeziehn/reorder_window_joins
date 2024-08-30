@@ -11,7 +11,8 @@ public class Batch_Result_Analysis {
         //"./src/main/resources/QnV_large_resultQ2_ASP.csv/6"
         //"./src/main/resources/QnV_largeresultQ4_1ASP.csv/7"
         //./src/main/resources/QnV_R2000070_resultQ5_ASP.csv/6
-        String file = "src/main/resources/QnV_large_resultQ7_I2_ASP.csv/11";
+        //String file = "src/main/resources/QnV_large_resultQ7_I2_ASP.csv/11";
+        String file = "src/main/resources/QnV_R2000070_resultIVJ3A_BC.csv";
         //String outputPath = "./src/main/resources/QnV_R2000070_resultQ5_NoDupl.csv";
 
         DataSet<String> in = env.readTextFile(file);

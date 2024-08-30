@@ -8,11 +8,11 @@ data1 <- read.csv(path, header = FALSE, sep =",")
 
 #path <- '/home/aziehn/resultQSEQ_E1_collection/FLog_'
 #path <- '/home/aziehn/BaselineExp/resultQSEQ_IVJ_T_E1/FLogS10_'
-path <- '/home/aziehn/SEQExp/FOut_QSEQ_IVJ_6L_'
+path <- '/home/aziehn/FOut_SWJT_C_BA_'
 
 result=c()
-tput = 175000
-for (i in 1:3){
+tput = 150000*16
+for (i in 1:9){
     data0 <- read.csv(paste(path, paste(i,'.txt', sep=""), sep=""), header = FALSE, sep ="$")
     data0 <- data0[data0$V4 != ' ms, AVGEventDetLatSum: ',]
     dataAGG <- aggregate(data0$V9, by = list(data0$V3), FUN = mean, na.rm=TRUE)
@@ -34,16 +34,19 @@ mean(dataAGG$x)
 #path <- '/home/aziehn/SelExp/FOut_QSEQ5L_'
 #path <- '/home/aziehn/WExp/FOut_QSEQIVJW4L_'
 #path <- '/home/aziehn/WExp/FOut_QSEQIVJW2L_'
-path <- '/home/aziehn/WExp/FOut_QSEQIVJW8L_'
+#path <- '/home/aziehn/WExp/FOut_QSEQIVJW8L_'
+path <- '/home/aziehn/FOut_IVJL_ACB_'
 
 resultL=c()
 minV = 100000000000
 maxV = 0
+sum = c()
 
-for (i in 1:1){
+for (i in 1:10){
     data0 <- read.csv(paste(path, paste(i,'.txt', sep=""), sep=""), header = FALSE, sep ="$")
     tempMin = min(data0$V5, na.rm = TRUE)
     tempMax = max(data0$V5, na.rm = TRUE)
+    sum[i] = max(data0$V9, na.rm = TRUE)
     if(tempMin < minV){
         minV=tempMin
     }
@@ -62,6 +65,7 @@ minV
 #max(resultL)
 maxV
 sd(resultL)
+mean(sum)
 
 
 #Selectivtiy

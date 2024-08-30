@@ -1,23 +1,15 @@
 # Util Folder
 
-In this folder, you can find basic and repetitively used classes for the patterns and queries, e.g., KeySelector or TimeStampAssigners. 
-
-## Event types 
-
-**HumidityEvent, QuantityEvent, TemperatureEvent, Part(icular)Matter2Event, 
-Part(icular)Matter10Event**, and **VelocityEvent** are the six used event types for our experiments.
-They inherit from KeyedDataPointGeneral (Base: DataPoint) and can be extended further if required.
+## UDF
+basic and repetitively used classes for the patterns and queries, i.e., KeySelector or TimeStampAssigners. 
+for the different queries. 
 
 ## SourceFunction 
 
-The **KeyedDataPointSourceFunction** is the general source that handles all in /src/main/resources
-provided files. If you change the format of the files make sure you write your own source
-function or adjust the provided Source accordingly. 
-
-The **KeyedDataPointParallelSourceFunction** is a special source for the single sensors files, i.e., R2000070/73 and luftdaten. 
-We use this source for our scalability experiments as this data source is executed in parallel. 
+The **ArtificialSourceFunction** is a Richparallelsource function that is executed in parallel
+and creates the multiple keys.  
 
 ## Metrics
 
-We use the **ThroughputLogger** and **LatencyLoggerTX** classes to monitor the throughput of our application. Be aware that placing
+We use the **ThroughputLogger** and **LatencyLoggerT9** classes to monitor the throughput of our application. Be aware that placing
 the logger needs to be done carefully as it may cause additional shuffling processes otherwise. 
