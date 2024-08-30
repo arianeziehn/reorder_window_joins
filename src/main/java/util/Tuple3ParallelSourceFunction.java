@@ -1,5 +1,6 @@
-package oldStuff_delete;
+package util;
 
+import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.streaming.api.functions.source.RichParallelSourceFunction;
 
 import java.io.File;
@@ -9,7 +10,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Scanner;
 
-public class KeyedDataPointParallelSourceFunction extends RichParallelSourceFunction<KeyedDataPointGeneral> {
+public class Tuple3ParallelSourceFunction extends RichParallelSourceFunction<Tuple3<Integer, Integer, Long>> {
     private volatile boolean isRunning = true;
     public static final int RECORD_SIZE_IN_BYTE = 89;
     private String key;
@@ -18,58 +19,13 @@ public class KeyedDataPointParallelSourceFunction extends RichParallelSourceFunc
     private Integer sourceLoops;  //integer runs over file
     private long currentTime;
     private String delimiter = ",";
+
+    private String streamIdentifier = "Q";
     private boolean manipulateIngestionRate = false;
     private long throughput;
     private int runtime = 25;
 
-    public KeyedDataPointParallelSourceFunction(String fileName) {
-        this.file = fileName;
-        this.key = null;
-        this.sourceLoops = 1;
-    }
-
-    public KeyedDataPointParallelSourceFunction(String fileName, long throughput) {
-        this.file = fileName;
-        this.key = null;
-        this.sourceLoops = 1;
-        this.throughput = throughput;
-        if (throughput == 0) {
-            this.manipulateIngestionRate = false;
-        } else {
-            this.manipulateIngestionRate = true;
-        }
-    }
-
-    public KeyedDataPointParallelSourceFunction(String fileName, String delimiter) {
-        this.file = fileName;
-        this.key = null;
-        this.sourceLoops = 1;
-        this.delimiter = delimiter;
-
-    }
-
-    public KeyedDataPointParallelSourceFunction(String fileName, String delimiter, long throughput) {
-        this.file = fileName;
-        this.key = null;
-        this.sourceLoops = 1;
-        this.delimiter = delimiter;
-        this.throughput = throughput;
-        if (throughput == 0) {
-            this.manipulateIngestionRate = false;
-        } else {
-            this.manipulateIngestionRate = true;
-        }
-    }
-
-    public KeyedDataPointParallelSourceFunction(String fileName, Integer loops, String delimiter) {
-        this.file = fileName;
-        this.key = null;
-        this.sourceLoops = loops;
-        this.delimiter = delimiter;
-
-    }
-
-    public KeyedDataPointParallelSourceFunction(String fileName, Integer sensors, String delimiter, long throughput) {
+    public Tuple3ParallelSourceFunction(String fileName, Integer sensors, String delimiter, long throughput) {
         this.file = fileName;
         this.key = null;
         this.sensors = sensors;
@@ -83,18 +39,11 @@ public class KeyedDataPointParallelSourceFunction extends RichParallelSourceFunc
         }
     }
 
-    public KeyedDataPointParallelSourceFunction(String fileName, Integer loops, String key, String delimiter) {
-        this.file = fileName;
-        this.key = key;
-        this.sourceLoops = loops;
-        this.delimiter = delimiter;
-    }
-
-    public KeyedDataPointParallelSourceFunction(String fileName, Integer loops, Integer sensors, String delimiter, long throughput) {
+    public Tuple3ParallelSourceFunction(String fileName, Integer sensors, String delimiter, long throughput, String streamIdentifier) {
         this.file = fileName;
         this.key = null;
         this.sensors = sensors;
-        this.sourceLoops = loops;
+        this.sourceLoops = 1;
         this.delimiter = delimiter;
         this.throughput = throughput;
         if (throughput == 0) {
@@ -104,7 +53,7 @@ public class KeyedDataPointParallelSourceFunction extends RichParallelSourceFunc
         }
     }
 
-    public void run(SourceContext<KeyedDataPointGeneral> sourceContext) throws Exception {
+    public void run(SourceContext<Tuple3<Integer, Integer, Long>> sourceContext) throws Exception {
         long startTime = System.currentTimeMillis();
         boolean run = true;
 
@@ -156,8 +105,8 @@ public class KeyedDataPointParallelSourceFunction extends RichParallelSourceFunc
                         millisSinceEpoch = this.currentTime;
                     }
 
-                    double velocity = Double.parseDouble(data[2].trim());
-                    double quantity = Double.parseDouble(data[3].trim());
+                    int velocity = (int) Double.parseDouble(data[2].trim());
+                    int quantity = (int) Double.parseDouble(data[3].trim());
 
                     float longitude = 8.615298750147367f;
                     float latitude = 49.84660732605085f;
@@ -171,17 +120,19 @@ public class KeyedDataPointParallelSourceFunction extends RichParallelSourceFunc
                     if (this.sensors >= maxPara) {
                         for (int i = 0; i < (this.sensors / maxPara); i++) {
 
-                            KeyedDataPointGeneral velEvent = new VelocityEvent(Integer.toString((this.getRuntimeContext().getIndexOfThisSubtask() + (maxPara * i))),
-                                    millisSinceEpoch, velocity, longitude, latitude);
+                            if (this.streamIdentifier == "V") {
+                                Tuple3<Integer, Integer, Long> event = new Tuple3<>((this.getRuntimeContext().getIndexOfThisSubtask() + (maxPara * i)), velocity,
+                                        millisSinceEpoch);
 
-                            sourceContext.collect(velEvent);
-                            tupleCounter++;
+                                sourceContext.collect(event);
+                                tupleCounter++;
+                            }else {
+                                Tuple3<Integer, Integer, Long> quaEvent = new Tuple3<>((this.getRuntimeContext().getIndexOfThisSubtask() + (maxPara * i)), quantity,
+                                        millisSinceEpoch);
 
-                            KeyedDataPointGeneral quaEvent = new QuantityEvent(Integer.toString((this.getRuntimeContext().getIndexOfThisSubtask() + (maxPara * i))),
-                                    millisSinceEpoch, quantity, longitude, latitude);
-
-                            sourceContext.collect(quaEvent);
-                            tupleCounter++;
+                                sourceContext.collect(quaEvent);
+                                tupleCounter++;
+                            }
                         }
                     } else {
                         run = false;
@@ -206,10 +157,7 @@ public class KeyedDataPointParallelSourceFunction extends RichParallelSourceFunc
 
                 } else if (data.length == 10 && data[1].equals("SDS011")) {
                     // parse SDS011
-                    float latitude = Float.parseFloat(data[3].trim());
-                    float longitude = Float.parseFloat(data[4].trim());
-
-                    if (this.sourceLoops == 1 || loopCount == 1) {
+                      if (this.sourceLoops == 1 || loopCount == 1) {
 
                         if(data[5].length()== 10){
                             millisSinceEpoch = Long.parseLong(data[5])*1000;
@@ -227,24 +175,17 @@ public class KeyedDataPointParallelSourceFunction extends RichParallelSourceFunc
                         millisSinceEpoch = this.currentTime;
                     }
 
-                    double p10 = Double.parseDouble(data[6].trim());
-                    double p2 = Double.parseDouble(data[9].trim());
+                    int p10 = (int) Double.parseDouble(data[6].trim());
 
                     int maxPara = this.getRuntimeContext().getNumberOfParallelSubtasks();
                     if (this.sensors >= maxPara) {
                         for (int i = 0; i < (this.sensors / maxPara); i++) {
 
-                            KeyedDataPointGeneral P1Event = new PartMatter10Event(Integer.toString((this.getRuntimeContext().getIndexOfThisSubtask() + (maxPara * i))),
-                                    millisSinceEpoch, p10, longitude, latitude);
-
-                            sourceContext.collect(P1Event);
+                            Tuple3<Integer, Integer, Long> event = new Tuple3<>((this.getRuntimeContext().getIndexOfThisSubtask() + (maxPara * i)), p10,
+                                    millisSinceEpoch);
+                            sourceContext.collect(event);
                             tupleCounter++;
 
-                            KeyedDataPointGeneral P2Event = new PartMatter2Event(Integer.toString((this.getRuntimeContext().getIndexOfThisSubtask() + (maxPara * i))),
-                                    millisSinceEpoch, p2, longitude, latitude);
-
-                            sourceContext.collect(P2Event);
-                            tupleCounter++;
                         }
                     } else {
                        run = false;
