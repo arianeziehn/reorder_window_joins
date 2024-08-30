@@ -1,7 +1,5 @@
 package util;
 
-import oldStuff_delete.KeyedDataPointGeneral;
-import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.api.java.tuple.*;
 import org.apache.flink.streaming.api.functions.AssignerWithPeriodicWatermarks;

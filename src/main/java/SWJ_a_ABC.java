@@ -16,6 +16,7 @@ import util.*;
 import java.util.concurrent.TimeUnit;
 
 import static java.lang.Math.max;
+import static java.lang.Math.round;
 
 /**
  * This is class runs a Sliding Window Join Query with the order [[A X B]^w1 x C]^w2
@@ -35,8 +36,10 @@ public class SWJ_a_ABC {
         Integer w1Slide = parameters.getInt("s1size", 10);
         Integer w2Size = parameters.getInt("w1size", 20);
         Integer w2Slide = parameters.getInt("s1size", 10);
-        long throughput = parameters.getLong("tput", 10000);
-        int freq = parameters.getInt("freq", 10); // 100 tuples per minute that is how to play with selectivtiy
+        long throughput = parameters.getLong("tput", 1000); //for me at least rather heavy already
+        int freq = parameters.getInt("freq", 1); // 1 tuples per minute that is how to play with selective
+        // 1 * 20 = 20 tuples per window per stream
+        // 20*20 for window one * 20 for third window
         String timePropagation = parameters.get("time_propagation", "A");
 
         String outputPath;
@@ -50,13 +53,15 @@ public class SWJ_a_ABC {
         env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
 
         DataStream<Tuple3<Integer, Integer, Long>> streamA = env.addSource(new ArtificalSourceFunction(throughput, max(w1Size, w2Size), freq, numberOfKeys))
+                .setParallelism(5) // this is 16/3 make it automatic
                 .assignTimestampsAndWatermarks(new UDFs.ExtractTimestamp(1000));
-        streamA.print();
 
         DataStream<Tuple3<Integer, Integer, Long>> streamB = env.addSource(new ArtificalSourceFunction(throughput, max(w1Size, w2Size), freq, numberOfKeys))
+                .setParallelism(5)
                 .assignTimestampsAndWatermarks(new UDFs.ExtractTimestamp(1000));
 
         DataStream<Tuple3<Integer, Integer, Long>> streamC = env.addSource(new ArtificalSourceFunction(throughput, max(w1Size, w2Size), freq, numberOfKeys))
+                .setParallelism(5)
                 .assignTimestampsAndWatermarks(new UDFs.ExtractTimestamp(1000));
 
         streamA.flatMap(new ThroughputLogger<Tuple3<Integer, Integer, Long>>(ArtificalSourceFunction.RECORD_SIZE_IN_BYTE, throughput));
@@ -82,12 +87,12 @@ public class SWJ_a_ABC {
                 .apply(new FlatJoinFunction<Tuple6<Integer, Integer, Long, Integer, Integer, Long>, Tuple3<Integer, Integer, Long>, Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>>() {
 
                     public void join(Tuple6<Integer, Integer, Long, Integer, Integer, Long> d1, Tuple3<Integer, Integer, Long> d2, Collector<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> collector) throws Exception {
-                        collector.collect(new Tuple9<>(d1.f0, d1.f1, d1.f2, d1.f3, d1.f4, d1.f5, d2.f0, d2.f1, d2.f2));
+                            collector.collect(new Tuple9<>(d1.f0, d1.f1, d1.f2, d1.f3, d1.f4, d1.f5, d2.f0, d2.f1, d2.f2));
                     }
                 });
 
         streamABC//.print();
-                .writeAsText(outputPath, FileSystem.WriteMode.OVERWRITE); //.setParallelism(1);
+                .writeAsText(outputPath, FileSystem.WriteMode.OVERWRITE).setParallelism(1);
 
         //System.out.println(env.getExecutionPlan());
         JobExecutionResult executionResult = env.execute("My Flink Job");

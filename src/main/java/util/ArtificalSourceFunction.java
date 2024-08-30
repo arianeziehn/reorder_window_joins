@@ -5,6 +5,8 @@ import org.apache.flink.streaming.api.functions.source.RichParallelSourceFunctio
 
 import java.util.Random;
 
+import static java.lang.Math.round;
+
 public class ArtificalSourceFunction extends RichParallelSourceFunction<Tuple3<Integer, Integer, Long>> {
     private volatile boolean isRunning = true;
     public static final int RECORD_SIZE_IN_BYTE = 89;
@@ -16,22 +18,10 @@ public class ArtificalSourceFunction extends RichParallelSourceFunction<Tuple3<I
     private int runtime;
     double freq; // tuples per minute
 
+
     public ArtificalSourceFunction(long throughput, int windowsize, double freq, int numberOfKeys) {
         this.numberOfKeys = numberOfKeys;
         this.runtime = 2;
-        this.windowsize = windowsize;
-        this.throughput = throughput;
-        this.freq = freq;
-        if (throughput == 0) {
-            this.manipulateIngestionRate = false;
-        } else {
-            this.manipulateIngestionRate = true;
-        }
-    }
-
-    public ArtificalSourceFunction(long throughput, int windowsize, int runtime, int freq) {
-        this.runtime = runtime;
-        this.numberOfKeys = 0;
         this.windowsize = windowsize;
         this.throughput = throughput;
         this.freq = freq;
@@ -57,15 +47,14 @@ public class ArtificalSourceFunction extends RichParallelSourceFunction<Tuple3<I
         long millisSinceEpoch = 0L;
 
         Random r = new Random();
-        while(run) {
+        while (run) {
             long now = System.currentTimeMillis();
-
             Integer value = r.nextInt();
             long eventTime = millisSinceEpoch;
             Integer key = 0;
 
             int maxPara = this.getRuntimeContext().getNumberOfParallelSubtasks();
-            if (this.numberOfKeys == 0){
+            if (this.numberOfKeys == 0) {
                 this.numberOfKeys = this.getRuntimeContext().getNumberOfParallelSubtasks();
             }
             if (this.numberOfKeys >= maxPara) {
@@ -96,11 +85,11 @@ public class ArtificalSourceFunction extends RichParallelSourceFunction<Tuple3<I
                  }*/
             }
 
-            millisSinceEpoch += (60000L/freq); //increase event time by 1 minute/ freq
+            millisSinceEpoch += (60000L / freq); //increase event time by 1 minute/ freq
 
             // check if the tuple counts equals the defined throughput (per second)
             if (tupleCounter >= throughput && manipulateIngestionRate) {
-                    // if tuples were creates faster then in 1 second, wait
+                // if tuples were creates faster then in 1 second, wait
                 if (((1000 - (now - start)) > 0) && ((now - this.startTime) < this.runtime * 60000L)) {
                     Thread.sleep(1000 - (now - start));
                     // in case runtime is reached stop producing tuples
