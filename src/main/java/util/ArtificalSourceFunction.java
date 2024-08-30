@@ -11,18 +11,17 @@ public class ArtificalSourceFunction extends RichParallelSourceFunction<Tuple3<I
     private long throughput;
     boolean manipulateIngestionRate;
     private int windowsize;
-
     private int numberOfKeys;
     private long startTime;
     private int runtime;
-    double selectivity;
+    double freq; // tuples per minute
 
-    public ArtificalSourceFunction(long throughput, int windowsize, double selectivity, int numberOfKeys) {
+    public ArtificalSourceFunction(long throughput, int windowsize, double freq, int numberOfKeys) {
         this.numberOfKeys = numberOfKeys;
         this.runtime = 2;
         this.windowsize = windowsize;
         this.throughput = throughput;
-        this.selectivity = selectivity;
+        this.freq = freq;
         if (throughput == 0) {
             this.manipulateIngestionRate = false;
         } else {
@@ -30,12 +29,12 @@ public class ArtificalSourceFunction extends RichParallelSourceFunction<Tuple3<I
         }
     }
 
-    public ArtificalSourceFunction(long throughput, int windowsize, int runtime, int selectivity) {
+    public ArtificalSourceFunction(long throughput, int windowsize, int runtime, int freq) {
         this.runtime = runtime;
-        this.numberOfKeys = this.getRuntimeContext().getNumberOfParallelSubtasks();
+        this.numberOfKeys = 0;
         this.windowsize = windowsize;
         this.throughput = throughput;
-        this.selectivity = selectivity;
+        this.freq = freq;
         if (throughput == 0) {
             this.manipulateIngestionRate = false;
         } else {
@@ -61,12 +60,20 @@ public class ArtificalSourceFunction extends RichParallelSourceFunction<Tuple3<I
         while(run) {
             long now = System.currentTimeMillis();
 
+            Integer value = r.nextInt();
+            long eventTime = millisSinceEpoch;
             Integer key = 0;
 
             int maxPara = this.getRuntimeContext().getNumberOfParallelSubtasks();
+            if (this.numberOfKeys == 0){
+                this.numberOfKeys = this.getRuntimeContext().getNumberOfParallelSubtasks();
+            }
             if (this.numberOfKeys >= maxPara) {
                 for (int i = 0; i < (this.numberOfKeys / maxPara); i++) {
                     key = this.getRuntimeContext().getIndexOfThisSubtask() + (maxPara * i);
+                    Tuple3<Integer, Integer, Long> event = new Tuple3<>(key, value, eventTime);
+                    sourceContext.collect(event); // output tuple
+                    tupleCounter++; // increase tuple counter
                 }
             } else {
                 run = false;
@@ -89,14 +96,7 @@ public class ArtificalSourceFunction extends RichParallelSourceFunction<Tuple3<I
                  }*/
             }
 
-
-            Integer value = r.nextInt();
-            long eventTime = millisSinceEpoch;
-
-            Tuple3<Integer, Integer, Long> event = new Tuple3<>(key, value, eventTime);
-            sourceContext.collect(event); // output tuple
-            tupleCounter++; // increase tuple counter
-            millisSinceEpoch += 60000L; //increase event time by 1 minute
+            millisSinceEpoch += (60000L/freq); //increase event time by 1 minute/ freq
 
             // check if the tuple counts equals the defined throughput (per second)
             if (tupleCounter >= throughput && manipulateIngestionRate) {

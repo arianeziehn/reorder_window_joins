@@ -4,9 +4,6 @@
 [cool, aber not important, user friendly] Parameter doppelt in jeder Klasse, nicer wäre eine klasse zuschreiben mit den Parametern
 und damit dann die ganten Permutationen laufen zu lassen
 
-
-
-
 ## Structure 
 
 ### src/main/java

@@ -35,8 +35,8 @@ public class SWJ_a_ABC {
         Integer w1Slide = parameters.getInt("s1size", 10);
         Integer w2Size = parameters.getInt("w1size", 20);
         Integer w2Slide = parameters.getInt("s1size", 10);
-        long throughput = parameters.getLong("tput", 100000);
-        double selectivity = parameters.getDouble("sel", 0.1);
+        long throughput = parameters.getLong("tput", 10000);
+        int freq = parameters.getInt("freq", 10); // 100 tuples per minute that is how to play with selectivtiy
         String timePropagation = parameters.get("time_propagation", "A");
 
         String outputPath;
@@ -49,14 +49,14 @@ public class SWJ_a_ABC {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
 
-        DataStream<Tuple3<Integer, Integer, Long>> streamA = env.addSource(new ArtificalSourceFunction(throughput, max(w1Size, w2Size), selectivity, numberOfKeys))
+        DataStream<Tuple3<Integer, Integer, Long>> streamA = env.addSource(new ArtificalSourceFunction(throughput, max(w1Size, w2Size), freq, numberOfKeys))
                 .assignTimestampsAndWatermarks(new UDFs.ExtractTimestamp(1000));
         streamA.print();
 
-        DataStream<Tuple3<Integer, Integer, Long>> streamB = env.addSource(new ArtificalSourceFunction(throughput, max(w1Size, w2Size), selectivity, numberOfKeys))
+        DataStream<Tuple3<Integer, Integer, Long>> streamB = env.addSource(new ArtificalSourceFunction(throughput, max(w1Size, w2Size), freq, numberOfKeys))
                 .assignTimestampsAndWatermarks(new UDFs.ExtractTimestamp(1000));
 
-        DataStream<Tuple3<Integer, Integer, Long>> streamC = env.addSource(new ArtificalSourceFunction(throughput, max(w1Size, w2Size), selectivity, numberOfKeys))
+        DataStream<Tuple3<Integer, Integer, Long>> streamC = env.addSource(new ArtificalSourceFunction(throughput, max(w1Size, w2Size), freq, numberOfKeys))
                 .assignTimestampsAndWatermarks(new UDFs.ExtractTimestamp(1000));
 
         streamA.flatMap(new ThroughputLogger<Tuple3<Integer, Integer, Long>>(ArtificalSourceFunction.RECORD_SIZE_IN_BYTE, throughput));
