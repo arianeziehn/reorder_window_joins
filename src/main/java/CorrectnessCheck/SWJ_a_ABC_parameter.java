@@ -60,7 +60,7 @@ public class SWJ_a_ABC_parameter {
                     public void join(Tuple3<Integer, Integer, Long> d1, Tuple3<Integer, Integer, Long> d2, Collector<Tuple6<Integer, Integer, Long, Integer, Integer, Long>> collector) throws Exception {
                         collector.collect(new Tuple6<>(d1.f0, d1.f1, d1.f2, d2.f0, d2.f1, d2.f2));
                     }
-                }).assignTimestampsAndWatermarks(new UDFs.ExtractTimestampAB(1000, timePropagation));
+                }).assignTimestampsAndWatermarks(new UDFs.ExtractTimestampAB(60000, timePropagation));
 
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC = streamAB.join(streamC)
                 .where(new UDFs.getKeyT6())

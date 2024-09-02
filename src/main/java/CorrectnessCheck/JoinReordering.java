@@ -15,8 +15,6 @@ import util.UDFs;
 
 import java.util.concurrent.TimeUnit;
 
-import static java.lang.Math.max;
-
 public class JoinReordering {
     public static void main(String[] args) throws Exception {
 
@@ -30,16 +28,16 @@ public class JoinReordering {
         Integer quaFilter = parameters.getInt("qua", 80);
         Integer pm10Filter = parameters.getInt("pmb", 20);
         // we except minutes
-        Integer w1Size = parameters.getInt("w1size", 20);
-        Integer w1Slide = parameters.getInt("s1size", 20);
+        Integer w1Size = parameters.getInt("w1size", 10);
+        Integer w1Slide = parameters.getInt("s1size", 30);
         Integer w2Size = parameters.getInt("w1size", 20);
-        Integer w2Slide = parameters.getInt("s1size", 20);
-        long throughput = parameters.getLong("tput", 10000); //tput per second, for me at least rather heavy already
+        Integer w2Slide = parameters.getInt("s1size", 30);
+        long throughput = parameters.getLong("tput", 1000); // we do it very slowly to be sure system grap it all
         String timePropagation = parameters.get("time_propagation", "A");
 
         String outputPath;
         if (!parameters.has("output")) {
-            outputPath = "./src/main/resources/resultSWJ_ACB_TW.csv";
+            outputPath = "./src/main/resources/resultSWJ_BCA_A4_w1_lt_w2.csv";
         } else {
             outputPath = parameters.get("output");
         }
@@ -48,12 +46,12 @@ public class JoinReordering {
         env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
 
         DataStream<Tuple3<Integer, Integer, Long>> streamA = env.addSource(new Tuple3ParallelSourceFunction(file, numberOfKeys, ",", throughput, "V"))
-                .setParallelism(5) // this is 16/3 make it automatic
+                .setParallelism(5) // this is 16/3 TODO make it automatic
                 .filter(t -> t.f1 > velFilter )
                 .assignTimestampsAndWatermarks(new UDFs.ExtractTimestamp(60000));
 
         DataStream<Tuple3<Integer, Integer, Long>> streamB = env.addSource(new Tuple3ParallelSourceFunction(file, numberOfKeys, ",", throughput, "Q"))
-                .setParallelism(5) // this is 16/3 make it automatic
+                .setParallelism(5) // this is 16/3 TODO make it automatic
                 .filter(t -> t.f1 > quaFilter)
                 .assignTimestampsAndWatermarks(new UDFs.ExtractTimestamp(60000));
 
@@ -67,9 +65,10 @@ public class JoinReordering {
         streamC.flatMap(new ThroughputLogger<Tuple3<Integer, Integer, Long>>(ArtificalSourceFunction.RECORD_SIZE_IN_BYTE, throughput));
 
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC =
-            //    new SWJ_a_ABC_parameter(streamA,streamB,streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
-              new SWJ_a_ACB_parameter(streamA,streamB,streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
-           // new SWJ_a_BCA_parameter(streamA,streamB,streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                 // new SWJ_a_ABC_parameter(streamA,streamB,streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                //   new SWJ_a_ACB_parameter(streamA,streamB,streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+            new SWJ_a_BCA_parameter(streamA,streamB,streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+
         //     new SWJ_a_CBA_parameter(streamA,streamB,streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
 
         streamABC//.print();

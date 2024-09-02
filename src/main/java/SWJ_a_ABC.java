@@ -53,7 +53,7 @@ public class SWJ_a_ABC {
         env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
 
         DataStream<Tuple3<Integer, Integer, Long>> streamA = env.addSource(new ArtificalSourceFunction(throughput, max(w1Size, w2Size), freq, numberOfKeys))
-                .setParallelism(5) // this is 16/3 make it automatic
+                .setParallelism(5) // this is 16 cores /3 make it automatic
                 .assignTimestampsAndWatermarks(new UDFs.ExtractTimestamp(1000));
 
         DataStream<Tuple3<Integer, Integer, Long>> streamB = env.addSource(new ArtificalSourceFunction(throughput, max(w1Size, w2Size), freq, numberOfKeys))

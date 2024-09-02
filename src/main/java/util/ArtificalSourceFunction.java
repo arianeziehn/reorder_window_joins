@@ -5,7 +5,6 @@ import org.apache.flink.streaming.api.functions.source.RichParallelSourceFunctio
 
 import java.util.Random;
 
-import static java.lang.Math.round;
 
 public class ArtificalSourceFunction extends RichParallelSourceFunction<Tuple3<Integer, Integer, Long>> {
     private volatile boolean isRunning = true;
@@ -21,7 +20,7 @@ public class ArtificalSourceFunction extends RichParallelSourceFunction<Tuple3<I
 
     public ArtificalSourceFunction(long throughput, int windowsize, double freq, int numberOfKeys) {
         this.numberOfKeys = numberOfKeys;
-        this.runtime = 2;
+        this.runtime = 2; // number of minutes the source function runs
         this.windowsize = windowsize;
         this.throughput = throughput;
         this.freq = freq;
