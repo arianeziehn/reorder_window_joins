@@ -29,41 +29,29 @@ import static java.lang.Math.max;
  * --input ./src/main/resources/QnV_R2000070.csv
  */
 
-public class SWJ_a_BAC {
-    public static void main(String[] args) throws Exception {
+public class SWJ_a_BAC_parameter {
+    DataStream<Tuple3<Integer, Integer, Long>> streamC;
+    DataStream<Tuple3<Integer, Integer, Long>> streamA;
+    DataStream<Tuple3<Integer, Integer, Long>> streamB;
+    Integer w1Size;
+    Integer w1Slide;
+    Integer w2Size;
+    Integer w2Slide;
+    String timePropagation;
 
-        final ParameterTool parameters = ParameterTool.fromArgs(args);
-        // Checking input parameters
-        // the number of keys, should be equals or more as parallelism
-        Integer numberOfKeys = parameters.getInt("keys", 16);
-        // we except minutes
-        Integer w1Size = parameters.getInt("w1size", 20);
-        Integer w1Slide = parameters.getInt("s1size", 10);
-        Integer w2Size = parameters.getInt("w1size", 20);
-        Integer w2Slide = parameters.getInt("s1size", 10);
-        long throughput = parameters.getLong("tput", 100000);
-        double selectivity = parameters.getDouble("sel", 0.1);
-        String timePropagation = parameters.get("time_propagation", "A");
 
-        String outputPath;
-        if (!parameters.has("output")) {
-            outputPath = "./src/main/resources/resultSWJ_BAC.csv";
-        } else {
-            outputPath = parameters.get("output");
-        }
+    public SWJ_a_BAC_parameter(DataStream<Tuple3<Integer, Integer, Long>> streamA, DataStream<Tuple3<Integer, Integer, Long>> streamB, DataStream<Tuple3<Integer, Integer, Long>>streamC, int w1Size, int w1Slide, int w2Size, int w2Slide, String timePropagation) {
+        this.streamA = streamA;
+        this.streamB = streamB;
+        this.streamC = streamC;
+        this.w1Size = w1Size;
+        this.w1Slide = w1Slide;
+        this.w2Size = w2Size;
+        this.w2Slide = w2Slide;
+        this.timePropagation = timePropagation;
+    }
 
-        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
-
-        DataStream<Tuple3<Integer, Integer, Long>> streamA = env.addSource(new ArtificalSourceFunction(throughput, max(w1Size, w2Size), selectivity, numberOfKeys)).assignTimestampsAndWatermarks(new UDFs.ExtractTimestamp(1000));
-
-        DataStream<Tuple3<Integer, Integer, Long>> streamB = env.addSource(new ArtificalSourceFunction(throughput, max(w1Size, w2Size), selectivity, numberOfKeys)).assignTimestampsAndWatermarks(new UDFs.ExtractTimestamp(1000));
-
-        DataStream<Tuple3<Integer, Integer, Long>> streamC = env.addSource(new ArtificalSourceFunction(throughput, max(w1Size, w2Size), selectivity, numberOfKeys)).assignTimestampsAndWatermarks(new UDFs.ExtractTimestamp(1000));
-
-        streamA.flatMap(new ThroughputLogger<Tuple3<Integer, Integer, Long>>(ArtificalSourceFunction.RECORD_SIZE_IN_BYTE, throughput));
-        streamB.flatMap(new ThroughputLogger<Tuple3<Integer, Integer, Long>>(ArtificalSourceFunction.RECORD_SIZE_IN_BYTE, throughput));
-        streamC.flatMap(new ThroughputLogger<Tuple3<Integer, Integer, Long>>(ArtificalSourceFunction.RECORD_SIZE_IN_BYTE, throughput));
+    public DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>>  run() {
 
         // join A B
         DataStream<Tuple6<Integer, Integer, Long, Integer, Integer, Long>> streamAB = streamB
@@ -90,12 +78,7 @@ public class SWJ_a_BAC {
                     }
                 });
 
-        streamABC//.print();
-                .writeAsText(outputPath, FileSystem.WriteMode.OVERWRITE); //.setParallelism(1);
-
-        //System.out.println(env.getExecutionPlan());
-        JobExecutionResult executionResult = env.execute("My Flink Job");
-        System.out.println("The job took " + executionResult.getNetRuntime(TimeUnit.MILLISECONDS) + "ms to execute");
+        return streamABC;
     }
 
 }
