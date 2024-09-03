@@ -2,7 +2,6 @@ import CorrectnessCheck.SWJ_a_ABC_parameter;
 import CorrectnessCheck.SWJ_a_ACB_parameter;
 import CorrectnessCheck.SWJ_a_BCA_parameter;
 import CorrectnessCheck.SWJ_a_BCA_parameter_w1_lt_w2;
-import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.api.java.tuple.Tuple9;
@@ -12,14 +11,13 @@ import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.jupiter.api.Disabled;
 import util.UDFs;
 
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
-public class JoinOperationsTest {
+public class SWJAssociativeTest {
 
     private StreamExecutionEnvironment env;
     private DataStream<Tuple3<Integer, Integer, Long>> streamA;
@@ -285,48 +283,78 @@ public class JoinOperationsTest {
 
     }
 
-    /**
+
     @Test
-    //TODO Case A3 W1=W2
-    public void testCaseA3() throws Exception {
+    //Case A3 W1 != W2, W1.l != W2.l, s1 = s2, slide < size
+    public void testCaseA3_w1_geq_w2_ABC_ACB_only() throws Exception {
         // Set up the testing environment
-        w1Size = 10;
-        w1Slide = 15;
+        w1Size = 15;
+        w1Slide = 5;
         w2Size = 10;
-        w2Slide = 15;
+        w2Slide = 5;
         timePropagation = "A";
+        String testCase = "A3_w1_geq_w2";
         // Execute each join operation
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC =
                 new SWJ_a_ABC_parameter(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamACB =
                 new SWJ_a_ACB_parameter(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
-        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA =
-                new SWJ_a_BCA_parameter(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
-
-        env.execute();
 
         String outputPath = "./src/main/resources/resultSWJ_";
         // Collect the results into lists
         streamABC
-                .writeAsText(outputPath + "ABC_A3.csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+                .writeAsText(outputPath + "ABC_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
         streamACB
-                .writeAsText(outputPath + "ACB_A3.csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
-        streamBCA
-                .writeAsText(outputPath + "BCA_A3.csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+                .writeAsText(outputPath + "ACB_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+
+        env.execute();
 
         final ExecutionEnvironment envBatch = ExecutionEnvironment.getExecutionEnvironment();
         envBatch.setParallelism(1);
 
-        List<String> resultABC = envBatch.readTextFile(outputPath + "ABC_A3.csv").distinct().collect();
-        List<String> resultACB = envBatch.readTextFile(outputPath + "ACB_A3.csv").distinct().collect();
-        List<String> resultBCA = envBatch.readTextFile(outputPath + "BCA_A3.csv").distinct().collect();
+        List<String> resultABC = envBatch.readTextFile(outputPath + "ABC_" + testCase + ".csv").distinct().collect();
+        List<String> resultACB = envBatch.readTextFile(outputPath + "ACB_" + testCase + ".csv").distinct().collect();
 
         // Compare the results
         assertEquals(resultABC.size(), resultACB.size());
-        assertEquals(resultABC,resultACB);
-        assertEquals(resultABC.size(), resultBCA.size());
-        assertEquals(resultABC,resultBCA);
-    }*/
+        assertEquals(resultABC, resultACB);
+    }
+
+    @Test
+    //Case A3 W1 != W2, W1.l != W2.l, s1 = s2, slide < size
+    public void testCaseA3_w1_lt_w2_ABC_ACB_only() throws Exception {
+        // Set up the testing environment
+        w1Size = 10;
+        w1Slide = 5;
+        w2Size = 15;
+        w2Slide = 5;
+        timePropagation = "A";
+        String testCase = "A3_w1_lt_w2";
+        // Execute each join operation
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC =
+                new SWJ_a_ABC_parameter(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamACB =
+                new SWJ_a_ACB_parameter(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+
+        String outputPath = "./src/main/resources/resultSWJ_";
+        // Collect the results into lists
+        streamABC
+                .writeAsText(outputPath + "ABC_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        streamACB
+                .writeAsText(outputPath + "ACB_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+
+        env.execute();
+
+        final ExecutionEnvironment envBatch = ExecutionEnvironment.getExecutionEnvironment();
+        envBatch.setParallelism(1);
+
+        List<String> resultABC = envBatch.readTextFile(outputPath + "ABC_" + testCase + ".csv").distinct().collect();
+        List<String> resultACB = envBatch.readTextFile(outputPath + "ACB_" + testCase + ".csv").distinct().collect();
+
+        // Compare the results
+        assertEquals(resultABC.size(), resultACB.size());
+        assertEquals(resultABC, resultACB);
+    }
 
     @Test
     //Case A4 W1!=W2, s >= l, W1.l != W2.l && W1.s == W2.s
@@ -412,6 +440,237 @@ public class JoinOperationsTest {
         assertEquals(resultABC,resultACB);
         assertEquals(resultABC.size(), resultBCA.size());
         assertEquals(resultABC,resultBCA);
+    }
+
+    @Test
+    //Case A5 W1!=W2, s < l, W1.l == W2.l && W1.s != W2.s
+    public void testCaseA5_s1_geq_s2_ABC_ACB_only() throws Exception {
+        // Set up the testing environment
+        w1Size = 20;
+        w1Slide = 10;
+        w2Size = 20;
+        w2Slide = 5;
+        timePropagation = "A";
+        String testCase = "A5_s1_geq_s2";
+        // Execute each join operation
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC =
+                new SWJ_a_ABC_parameter(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamACB =
+                new SWJ_a_ACB_parameter(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+
+        String outputPath = "./src/main/resources/resultSWJ_";
+        // Collect the results into lists
+        streamABC
+                .writeAsText(outputPath + "ABC_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        streamACB
+                .writeAsText(outputPath + "ACB_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+
+        env.execute();
+
+        final ExecutionEnvironment envBatch = ExecutionEnvironment.getExecutionEnvironment();
+        envBatch.setParallelism(1);
+
+        List<String> resultABC = envBatch.readTextFile(outputPath + "ABC_"+testCase+".csv").distinct().collect();
+        List<String> resultACB = envBatch.readTextFile(outputPath + "ACB_"+testCase+".csv").distinct().collect();
+
+        // Compare the results
+        assertEquals(resultABC.size(), resultACB.size());
+        assertEquals(resultABC,resultACB);
+     }
+
+    @Test
+    //Case A5 W1!=W2, s < l, W1.l == W2.l && W1.s != W2.s
+    public void testCaseA5_s1_lt_s2_ABC_ACB_only() throws Exception {
+        // Set up the testing environment
+        w1Size = 20;
+        w1Slide = 5;
+        w2Size = 20;
+        w2Slide = 10;
+        timePropagation = "A";
+        String testCase = "A5_sw1_lt_s2";
+        // Execute each join operation
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC =
+                new SWJ_a_ABC_parameter(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamACB =
+                new SWJ_a_ACB_parameter(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+
+        String outputPath = "./src/main/resources/resultSWJ_";
+        // Collect the results into lists
+        streamABC
+                .writeAsText(outputPath + "ABC_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        streamACB
+                .writeAsText(outputPath + "ACB_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+
+        env.execute();
+
+        final ExecutionEnvironment envBatch = ExecutionEnvironment.getExecutionEnvironment();
+        envBatch.setParallelism(1);
+
+        List<String> resultABC = envBatch.readTextFile(outputPath + "ABC_"+testCase+".csv").distinct().collect();
+        List<String> resultACB = envBatch.readTextFile(outputPath + "ACB_"+testCase+".csv").distinct().collect();
+
+        // Compare the results
+        assertEquals(resultABC.size(), resultACB.size());
+        assertEquals(resultABC,resultACB);
+    }
+
+    @Test
+    //Case A6 W1!=W2, s >= l, W1.l == W2.l && W1.s != W2.s
+    public void testCaseA6_s1_lt_s2() throws Exception {
+        // Set up the testing environment
+        w1Size = 20;
+        w1Slide = 20; // TODO fix local clock alignment when slide is not divider, eg., 30
+        w2Size = 20;
+        w2Slide = 40;
+        timePropagation = "A";
+        String testCase = "A6_s1_lt_s2";
+        // Execute each join operation
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC =
+                new SWJ_a_ABC_parameter(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamACB =
+                new SWJ_a_ACB_parameter(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA =
+                new SWJ_a_BCA_parameter(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+
+        String outputPath = "./src/main/resources/resultSWJ_";
+        // Collect the results into lists
+        streamABC
+                .writeAsText(outputPath + "ABC_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        streamACB
+                .writeAsText(outputPath + "ACB_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        streamBCA
+                .writeAsText(outputPath + "BCA_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+
+        env.execute();
+
+        final ExecutionEnvironment envBatch = ExecutionEnvironment.getExecutionEnvironment();
+        envBatch.setParallelism(1);
+
+        List<String> resultABC = envBatch.readTextFile(outputPath + "ABC_"+testCase+".csv").distinct().collect();
+        List<String> resultACB = envBatch.readTextFile(outputPath + "ACB_"+testCase+".csv").distinct().collect();
+        List<String> resultBCA = envBatch.readTextFile(outputPath + "BCA_"+testCase+".csv").distinct().collect();
+
+        // Compare the results
+        assertEquals(resultABC.size(), resultACB.size());
+        assertEquals(resultABC,resultACB);
+        assertEquals(resultABC.size(), resultBCA.size());
+        assertEquals(resultABC,resultBCA);
+    }
+
+    @Test
+    //Case A6 W1!=W2, s >= l, W1.l == W2.l && W1.s != W2.s
+    public void testCaseA6_s1_geq_s2() throws Exception {
+        // Set up the testing environment
+        w1Size = 20;
+        w1Slide = 40; // TODO fix local clock alignment when slide is not divider, eg., 30
+        w2Size = 20;
+        w2Slide = 20;
+        timePropagation = "A";
+        String testCase = "A6_s1_geq_s2";
+        // Execute each join operation
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC =
+                new SWJ_a_ABC_parameter(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamACB =
+                new SWJ_a_ACB_parameter(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA =
+                new SWJ_a_BCA_parameter(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+
+        String outputPath = "./src/main/resources/resultSWJ_";
+        // Collect the results into lists
+        streamABC
+                .writeAsText(outputPath + "ABC_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        streamACB
+                .writeAsText(outputPath + "ACB_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        streamBCA
+                .writeAsText(outputPath + "BCA_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+
+        env.execute();
+
+        final ExecutionEnvironment envBatch = ExecutionEnvironment.getExecutionEnvironment();
+        envBatch.setParallelism(1);
+
+        List<String> resultABC = envBatch.readTextFile(outputPath + "ABC_"+testCase+".csv").distinct().collect();
+        List<String> resultACB = envBatch.readTextFile(outputPath + "ACB_"+testCase+".csv").distinct().collect();
+        List<String> resultBCA = envBatch.readTextFile(outputPath + "BCA_"+testCase+".csv").distinct().collect();
+
+        // Compare the results
+        assertEquals(resultABC.size(), resultACB.size());
+        assertEquals(resultABC,resultACB);
+        assertEquals(resultABC.size(), resultBCA.size());
+        assertEquals(resultABC,resultBCA);
+    }
+
+    @Test
+    //Case A7 W1!=W2, s < l, W1.l != W2.l && W1.s != W2.s
+    public void testCaseA7_w1_lt_w2_s1_geq_s2_ABC_ACB_only() throws Exception {
+        // Set up the testing environment
+        w1Size = 20;
+        w1Slide = 10;
+        w2Size = 25;
+        w2Slide = 5;
+        timePropagation = "A";
+        String testCase = "A7_w1_lt_w2_s1_geq_s2";
+        // Execute each join operation
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC =
+                new SWJ_a_ABC_parameter(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamACB =
+                new SWJ_a_ACB_parameter(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+
+        String outputPath = "./src/main/resources/resultSWJ_";
+        // Collect the results into lists
+        streamABC
+                .writeAsText(outputPath + "ABC_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        streamACB
+                .writeAsText(outputPath + "ACB_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+
+        env.execute();
+
+        final ExecutionEnvironment envBatch = ExecutionEnvironment.getExecutionEnvironment();
+        envBatch.setParallelism(1);
+
+        List<String> resultABC = envBatch.readTextFile(outputPath + "ABC_"+testCase+".csv").distinct().collect();
+        List<String> resultACB = envBatch.readTextFile(outputPath + "ACB_"+testCase+".csv").distinct().collect();
+
+        // Compare the results
+        assertEquals(resultABC.size(), resultACB.size());
+        assertEquals(resultABC,resultACB);
+    }
+
+    @Test
+    //Case A7 W1!=W2, s < l, W1.l != W2.l && W1.s != W2.s
+    public void testCaseA7_w1_geq_w2_s1_geq_s2_ABC_ACB_only() throws Exception {
+        // Set up the testing environment
+        w1Size = 20;
+        w1Slide = 10;
+        w2Size = 10;
+        w2Slide = 5;
+        timePropagation = "A";
+        String testCase = "A7_w1_geq_w2_s1_geq_s2";
+        // Execute each join operation
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC =
+                new SWJ_a_ABC_parameter(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamACB =
+                new SWJ_a_ACB_parameter(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+
+        String outputPath = "./src/main/resources/resultSWJ_";
+        // Collect the results into lists
+        streamABC
+                .writeAsText(outputPath + "ABC_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        streamACB
+                .writeAsText(outputPath + "ACB_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+
+        env.execute();
+
+        final ExecutionEnvironment envBatch = ExecutionEnvironment.getExecutionEnvironment();
+        envBatch.setParallelism(1);
+
+        List<String> resultABC = envBatch.readTextFile(outputPath + "ABC_"+testCase+".csv").distinct().collect();
+        List<String> resultACB = envBatch.readTextFile(outputPath + "ACB_"+testCase+".csv").distinct().collect();
+
+        // Compare the results
+        assertEquals(resultABC.size(), resultACB.size());
+        assertEquals(resultABC,resultACB);
+
     }
 
     @Test
