@@ -16,7 +16,7 @@ import util.UDFs;
  * no clue if that holds!
  */
 
-public class SWJ_a_BCA_parameter {
+public class SWJ_bc_BCA_default {
     DataStream<Tuple3<Integer, Integer, Long>> streamC;
     DataStream<Tuple3<Integer, Integer, Long>> streamA;
     DataStream<Tuple3<Integer, Integer, Long>> streamB;
@@ -27,7 +27,7 @@ public class SWJ_a_BCA_parameter {
     String timePropagation;
 
 
-    public SWJ_a_BCA_parameter(DataStream<Tuple3<Integer, Integer, Long>> streamA, DataStream<Tuple3<Integer, Integer, Long>> streamB, DataStream<Tuple3<Integer, Integer, Long>> streamC, int w1Size, int w1Slide, int w2Size, int w2Slide, String timePropagation) {
+    public SWJ_bc_BCA_default(DataStream<Tuple3<Integer, Integer, Long>> streamA, DataStream<Tuple3<Integer, Integer, Long>> streamB, DataStream<Tuple3<Integer, Integer, Long>> streamC, int w1Size, int w1Slide, int w2Size, int w2Slide, String timePropagation) {
         this.streamA = streamA;
         this.streamB = streamB;
         this.streamC = streamC;
@@ -40,18 +40,11 @@ public class SWJ_a_BCA_parameter {
 
     public DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> run() {
 
-        Integer w_max_Size = w1Size;
-        Integer w_max_Slide = w1Slide;
-        // it follow w2Size < w1Size and we want to be efficient, so we propagate C and w2Size
-        Integer w_min_Size = w2Size;
-        Integer w_min_Slide = w2Slide;
-        timePropagation = "C";
-
         // join A B
         DataStream<Tuple6<Integer, Integer, Long, Integer, Integer, Long>> streamBC = streamB.join(streamC)
                 .where(new UDFs.getKeyT3())
                 .equalTo(new UDFs.getKeyT3())
-                .window(SlidingEventTimeWindows.of(Time.minutes(w_max_Size), Time.minutes(w_max_Slide)))
+                .window(SlidingEventTimeWindows.of(Time.minutes(w2Size), Time.minutes(w2Slide)))
                 .apply(new FlatJoinFunction<Tuple3<Integer, Integer, Long>, Tuple3<Integer, Integer, Long>, Tuple6<Integer, Integer, Long, Integer, Integer, Long>>() {
                     @Override
                     public void join(Tuple3<Integer, Integer, Long> d1, Tuple3<Integer, Integer, Long> d2, Collector<Tuple6<Integer, Integer, Long, Integer, Integer, Long>> collector) throws Exception {
@@ -62,7 +55,7 @@ public class SWJ_a_BCA_parameter {
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC = streamBC.join(streamA)
                 .where(new UDFs.getKeyT6())
                 .equalTo(new UDFs.getKeyT3())
-                .window(SlidingEventTimeWindows.of(Time.minutes(w_min_Size), Time.minutes(w_min_Slide)))
+                .window(SlidingEventTimeWindows.of(Time.minutes(w1Size), Time.minutes(w1Slide)))
                 .apply(new FlatJoinFunction<Tuple6<Integer, Integer, Long, Integer, Integer, Long>, Tuple3<Integer, Integer, Long>, Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>>() {
 
                     public void join(Tuple6<Integer, Integer, Long, Integer, Integer, Long> d1, Tuple3<Integer, Integer, Long> d2, Collector<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> collector) throws Exception {
