@@ -9,33 +9,29 @@ import org.apache.flink.util.Collector;
 import util.UDFs;
 
 /**
- * This is class runs a Sliding Window Join Query with the order [[A X B]^w1 x C]^w2
- * parameters:
- * Run with these parameters:
+ * This is class runs an Interval Join Query with the order [B X A]^w1 and return the result stream AB
  */
 
-public class IVJ_BA_parameter {
+public class IVJ_BA {
     DataStream<Tuple3<Integer, Integer, Long>> streamA;
     DataStream<Tuple3<Integer, Integer, Long>> streamB;
     Integer lowerBound;
     Integer upperBound;
 
 
-    public IVJ_BA_parameter(DataStream<Tuple3<Integer, Integer, Long>> streamA, DataStream<Tuple3<Integer, Integer, Long>> streamB, int lowerBound, int upperBound) {
-    this.streamA = streamA;
-    this.streamB = streamB;
-    this.lowerBound = lowerBound;
-    this.upperBound = upperBound;
+    public IVJ_BA(DataStream<Tuple3<Integer, Integer, Long>> streamA, DataStream<Tuple3<Integer, Integer, Long>> streamB, int lowerBound, int upperBound) {
+        this.streamA = streamA;
+        this.streamB = streamB;
+        this.lowerBound = lowerBound;
+        this.upperBound = upperBound;
     }
 
-    public DataStream<Tuple6<Integer, Integer, Long, Integer, Integer, Long>>  run() {
+    public DataStream<Tuple6<Integer, Integer, Long, Integer, Integer, Long>> run() {
         // join A B
         DataStream<Tuple6<Integer, Integer, Long, Integer, Integer, Long>> streamAB = streamB
                 .keyBy(new UDFs.getKeyT3())
                 .intervalJoin(streamA.keyBy(new UDFs.getKeyT3()))
                 .between(Time.minutes(lowerBound), Time.minutes(upperBound))
-                .lowerBoundExclusive()
-                .upperBoundExclusive()
                 .process(new ProcessJoinFunction<Tuple3<Integer, Integer, Long>, Tuple3<Integer, Integer, Long>, Tuple6<Integer, Integer, Long, Integer, Integer, Long>>() {
 
                     @Override

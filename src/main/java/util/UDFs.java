@@ -67,11 +67,11 @@ public class UDFs {
         @Override
         public long extractTimestamp(Tuple6<Integer, Integer, Long, Integer, Integer, Long> element, long l) {
             long timestamp = 0L;
-            if (timePropagation.equals("A")){
-                timestamp = element.f2;
+            if (timePropagation.equals("B")){
+                timestamp = element.f5;
             }else
             {
-                timestamp = element.f5;
+                timestamp = element.f2; // automatically propagate 'A' if timestamp assignment is wrong
             }
             currentMaxTimestamp = Math.max(timestamp, currentMaxTimestamp);
             return timestamp;
@@ -105,11 +105,11 @@ public class UDFs {
         @Override
         public long extractTimestamp(Tuple6<Integer, Integer, Long, Integer, Integer, Long> element, long l) {
             long timestamp = 0L;
-            if (timePropagation.equals("B")){
-                timestamp = element.f2;
+            if (timePropagation.equals("C")){
+                timestamp = element.f5;
             }else
             {
-                timestamp = element.f5;
+                timestamp = element.f2; // automatically propagate B if not declared otherwise
             }
             currentMaxTimestamp = Math.max(timestamp, currentMaxTimestamp);
             return timestamp;

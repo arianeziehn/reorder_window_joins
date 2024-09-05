@@ -2,7 +2,6 @@ import CorrectnessCheck.*;
 import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.api.java.tuple.Tuple6;
-import org.apache.flink.api.java.tuple.Tuple9;
 import org.apache.flink.core.fs.FileSystem;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -127,9 +126,9 @@ public class CommutativeTest {
         String testCase = "C1";
         // Execute each join operation
         DataStream<Tuple6<Integer, Integer, Long, Integer, Integer, Long>> streamAB =
-                new SWJ_AB_parameter(streamA, streamB, w1Size, w1Slide).run();
+                new SWJ_AB(streamA, streamB, w1Size, w1Slide).run();
         DataStream<Tuple6<Integer, Integer, Long, Integer, Integer, Long>> streamBA =
-                new SWJ_BA_parameter(streamA, streamB, w1Size, w1Slide).run();
+                new SWJ_BA(streamA, streamB, w1Size, w1Slide).run();
 
         String outputPath = "./src/main/resources/result_Commu_SWJ_";
         // Collect the results into lists
@@ -159,9 +158,9 @@ public class CommutativeTest {
         String testCase = "C1_s_gt_l";
         // Execute each join operation
         DataStream<Tuple6<Integer, Integer, Long, Integer, Integer, Long>> streamAB =
-                new SWJ_AB_parameter(streamA, streamB, w1Size, w1Slide).run();
+                new SWJ_AB(streamA, streamB, w1Size, w1Slide).run();
         DataStream<Tuple6<Integer, Integer, Long, Integer, Integer, Long>> streamBA =
-                new SWJ_BA_parameter(streamA, streamB, w1Size, w1Slide).run();
+                new SWJ_BA(streamA, streamB, w1Size, w1Slide).run();
 
         String outputPath = "./src/main/resources/result_Commu_SWJ_";
         // Collect the results into lists
@@ -257,9 +256,9 @@ public class CommutativeTest {
         String testCase = "C2";
         // Execute each join operation
         DataStream<Tuple6<Integer, Integer, Long, Integer, Integer, Long>> streamAB =
-                new SeWJ_AB_parameter(streamA, streamB, w1Size).run();
+                new SeWJ_AB(streamA, streamB, w1Size).run();
         DataStream<Tuple6<Integer, Integer, Long, Integer, Integer, Long>> streamBA =
-                new SeWJ_BA_parameter(streamA, streamB, w1Size).run();
+                new SeWJ_BA(streamA, streamB, w1Size).run();
 
         String outputPath = "./src/main/resources/result_SeWJ_";
         // Collect the results into lists
@@ -289,9 +288,9 @@ public class CommutativeTest {
         String testCase = "C3";
         // Execute each join operation
         DataStream<Tuple6<Integer, Integer, Long, Integer, Integer, Long>> streamAB =
-                new IVJ_AB_parameter(streamA, streamB, w1Size, w1Size).run();
+                new IVJ_AB(streamA, streamB, w1Size, w1Size).run();
         DataStream<Tuple6<Integer, Integer, Long, Integer, Integer, Long>> streamBA =
-                new IVJ_BA_parameter(streamA, streamB, w1Size, w1Size).run();
+                new IVJ_BA(streamA, streamB, w1Size, w1Size).run();
 
         String outputPath = "./src/main/resources/result_IVJ_";
         // Collect the results into lists
@@ -323,9 +322,9 @@ public class CommutativeTest {
         String testCase = "C3";
         // Execute each join operation
         DataStream<Tuple6<Integer, Integer, Long, Integer, Integer, Long>> streamAB =
-                new IVJ_AB_parameter(streamA, streamB, w1Size, w1Slide).run();
+                new IVJ_AB(streamA, streamB, w1Size, w1Slide).run();
         DataStream<Tuple6<Integer, Integer, Long, Integer, Integer, Long>> streamBA =
-                new IVJ_BA_parameter(streamA, streamB, w1Size, w1Slide).run();
+                new IVJ_BA(streamA, streamB, w1Size, w1Slide).run();
 
         String outputPath = "./src/main/resources/result_IVJ_";
         // Collect the results into lists
@@ -355,9 +354,9 @@ public class CommutativeTest {
         String testCase = "C3_lB_gt_uB";
         // Execute each join operation
         DataStream<Tuple6<Integer, Integer, Long, Integer, Integer, Long>> streamAB =
-                new IVJ_AB_parameter(streamA, streamB, w1Size, w1Slide).run();
+                new IVJ_AB(streamA, streamB, w1Size, w1Slide).run();
         DataStream<Tuple6<Integer, Integer, Long, Integer, Integer, Long>> streamBA =
-                new IVJ_BA_parameter(streamA, streamB, w1Size, w1Slide).run();
+                new IVJ_BA(streamA, streamB, w1Size, w1Slide).run();
 
         String outputPath = "./src/main/resources/result_IVJ_";
         // Collect the results into lists
