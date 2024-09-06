@@ -508,6 +508,7 @@ public class AssociativeTest {
 
         // Compare the result
         assertNotEquals(resultABC_a,resultBCA_a);
+        // we show in the real world data test (AssociativeTest_QnVData) the case below does not hold.
         assertEquals(resultABC_b.size(), resultBCA_b.size());
         assertEquals(resultABC_b,resultBCA_b);
     }

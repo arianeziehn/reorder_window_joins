@@ -268,108 +268,6 @@ public class AssociativeTest_QnVData {
     @Test
     //Case A5: Session Windows
     public void testCaseA5() throws Exception {
-        streamA = env.fromElements(
-                new Tuple3<>(1, 2, (1*60000L)),
-                new Tuple3<>(1, 3, (3*60000L)),
-                new Tuple3<>(1, 2, (5*60000L)),
-                new Tuple3<>(1, 3, (7*60000L)),
-                new Tuple3<>(1, 2, (9*60000L)),
-                new Tuple3<>(1, 3, (11*60000L)),
-                new Tuple3<>(1, 2, (13*60000L)),
-                new Tuple3<>(1, 3, (15*60000L)),
-                new Tuple3<>(1, 2, (17*60000L)),
-                new Tuple3<>(1, 3, (19*60000L)),
-                new Tuple3<>(1, 3, (31*60000L)),
-                new Tuple3<>(1, 2, (33*60000L)),
-                new Tuple3<>(1, 3, (35*60000L)),
-                new Tuple3<>(1, 2, (37*60000L)),
-                new Tuple3<>(1, 3, (39*60000L)),
-                new Tuple3<>(1, 2, (49*60000L)),
-                new Tuple3<>(1, 3, (51*60000L)),
-                new Tuple3<>(1, 2, (53*60000L)),
-                new Tuple3<>(1, 3, (55*60000L)),
-                new Tuple3<>(1, 2, (57*60000L)),
-                new Tuple3<>(1, 3, (59*60000L)),
-                new Tuple3<>(1, 2, (61*60000L)),
-                new Tuple3<>(1, 3, (67*60000L)),
-                new Tuple3<>(1, 2, (69*60000L)),
-                new Tuple3<>(1, 3, (71*60000L)),
-                new Tuple3<>(1, 2, (73*60000L)),
-                new Tuple3<>(1, 3, (75*60000L)),
-                new Tuple3<>(1, 2, (77*60000L)),
-                new Tuple3<>(1, 3, (79*60000L))
-        ).assignTimestampsAndWatermarks(new UDFs.ExtractTimestamp(1000));
-
-        streamB = env.fromElements(
-                new Tuple3<>(1, 2, (2*60000L)),
-                new Tuple3<>(1, 3, (4*60000L)),
-                new Tuple3<>(1, 2, (6*60000L)),
-                new Tuple3<>(1, 3, (8*60000L)),
-                new Tuple3<>(1, 2, (10*60000L)),
-                new Tuple3<>(1, 3, (12*60000L)),
-                new Tuple3<>(1, 2, (14*60000L)),
-                new Tuple3<>(1, 3, (16*60000L)),
-                new Tuple3<>(1, 2, (18*60000L)),
-                new Tuple3<>(1, 3, (20*60000L)),
-                new Tuple3<>(1, 2, (30*60000L)),
-                new Tuple3<>(1, 3, (32*60000L)),
-                new Tuple3<>(1, 2, (34*60000L)),
-                new Tuple3<>(1, 3, (36*60000L)),
-                new Tuple3<>(1, 2, (38*60000L)),
-                new Tuple3<>(1, 3, (40*60000L)),
-                new Tuple3<>(1, 2, (42*60000L)),
-                new Tuple3<>(1, 3, (50*60000L)),
-                new Tuple3<>(1, 2, (52*60000L)),
-                new Tuple3<>(1, 3, (54*60000L)),
-                new Tuple3<>(1, 2, (56*60000L)),
-                new Tuple3<>(1, 3, (58*60000L)),
-                new Tuple3<>(1, 2, (60*60000L)),
-                new Tuple3<>(1, 3, (62*60000L)),
-                new Tuple3<>(1, 2, (68*60000L)),
-                new Tuple3<>(1, 3, (70*60000L)),
-                new Tuple3<>(1, 2, (72*60000L)),
-                new Tuple3<>(1, 3, (74*60000L)),
-                new Tuple3<>(1, 2, (76*60000L)),
-                new Tuple3<>(1, 3, (78*60000L)),
-                new Tuple3<>(1, 2, (80*60000L)),
-                new Tuple3<>(1, 3, (82*60000L))
-        ).assignTimestampsAndWatermarks(new UDFs.ExtractTimestamp(1000));
-
-        streamC = env.fromElements(
-                new Tuple3<>(1, 2, (1*60000L)),
-                new Tuple3<>(1, 3, (3*60000L)),
-                new Tuple3<>(1, 2, (5*60000L)),
-                new Tuple3<>(1, 3, (7*60000L)),
-                new Tuple3<>(1, 2, (9*60000L)),
-                new Tuple3<>(1, 3, (11*60000L)),
-                new Tuple3<>(1, 2, (13*60000L)),
-                new Tuple3<>(1, 3, (15*60000L)),
-                new Tuple3<>(1, 2, (17*60000L)),
-                new Tuple3<>(1, 3, (19*60000L)),
-                new Tuple3<>(1, 2, (21*60000L)),
-                new Tuple3<>(1, 3, (23*60000L)),
-                new Tuple3<>(1, 3, (31*60000L)),
-                new Tuple3<>(1, 2, (33*60000L)),
-                new Tuple3<>(1, 3, (35*60000L)),
-                new Tuple3<>(1, 2, (37*60000L)),
-                new Tuple3<>(1, 3, (39*60000L)),
-                new Tuple3<>(1, 2, (41*60000L)),
-                new Tuple3<>(1, 3, (43*60000L)),
-                new Tuple3<>(1, 2, (45*60000L)),
-                new Tuple3<>(1, 3, (47*60000L)),
-                new Tuple3<>(1, 2, (49*60000L)),
-                new Tuple3<>(1, 3, (51*60000L)),
-                new Tuple3<>(1, 2, (53*60000L)),
-                new Tuple3<>(1, 3, (55*60000L)),
-                new Tuple3<>(1, 2, (57*60000L)),
-                new Tuple3<>(1, 3, (59*60000L)),
-                new Tuple3<>(1, 3, (71*60000L)),
-                new Tuple3<>(1, 2, (73*60000L)),
-                new Tuple3<>(1, 3, (75*60000L)),
-                new Tuple3<>(1, 2, (77*60000L)),
-                new Tuple3<>(1, 3, (79*60000L))
-        ).assignTimestampsAndWatermarks(new UDFs.ExtractTimestamp(1000));
-
         w1Size = 5;
         w2Size = 5;
         timePropagation = "A";
@@ -410,8 +308,7 @@ public class AssociativeTest_QnVData {
 
         // Compare the result
         assertNotEquals(resultABC_a,resultBCA_a);
-        assertEquals(resultABC_b.size(), resultBCA_b.size());
-        assertEquals(resultABC_b,resultBCA_b);
+        assertNotEquals(resultABC_b,resultBCA_b);
     }
 
     @Test
