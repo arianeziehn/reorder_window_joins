@@ -20,7 +20,7 @@ public class ArtificalSourceFunction extends RichParallelSourceFunction<Tuple3<I
 
     public ArtificalSourceFunction(long throughput, int windowsize, double freq, int numberOfKeys) {
         this.numberOfKeys = numberOfKeys;
-        this.runtime = 2; // number of minutes the source function runs
+        this.runtime = 1; // number of minutes the source function runs
         this.windowsize = windowsize;
         this.throughput = throughput;
         this.freq = freq;
