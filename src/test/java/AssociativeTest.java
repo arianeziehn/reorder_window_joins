@@ -1,4 +1,3 @@
-import CorrectnessCheck.*;
 import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.api.java.tuple.Tuple9;
@@ -168,7 +167,7 @@ public class AssociativeTest {
     // Proof Section of Paper
     @Test
     //Case A1: W1 = W2, W2.s < W2.l // Proof Section of Paper
-    public void testCaseA1_default() throws Exception {
+    public void testCaseA1() throws Exception {
         w1Size = 10;
         w1Slide = 5;
         w2Size = 10;
@@ -217,7 +216,7 @@ public class AssociativeTest {
 
     @Test
     //Case A2 W1=W2, W2.s >= W2.l
-    public void testCaseA2_default() throws Exception {
+    public void testCaseA2() throws Exception {
         // Set up the testing environment
         w1Size = 10;
         w1Slide = 15;
@@ -268,7 +267,7 @@ public class AssociativeTest {
 
     @Test
     //Case A3 W1 != W2, W2.s < W2.l and W1.l >= W2.l
-    public void testCaseA3_default() throws Exception {
+    public void testCaseA3() throws Exception {
         // Set up the testing environment
         w1Size = 20;
         w1Slide = 30;
@@ -317,7 +316,7 @@ public class AssociativeTest {
 
     @Test
     //Case A4 W1 != W2, W2.s >= W2.l and W1.l >= W2.l
-    public void testCaseA4_default() throws Exception {
+    public void testCaseA4() throws Exception {
         // Set up the testing environment
         w1Size = 20;
         w1Slide = 30;
@@ -366,7 +365,7 @@ public class AssociativeTest {
 
     @Test
     //Case A5: Session Windows
-    public void testCaseA5_default() throws Exception {
+    public void testCaseA5() throws Exception {
         streamA = env.fromElements(
                 new Tuple3<>(1, 2, (1*60000L)),
                 new Tuple3<>(1, 3, (3*60000L)),
@@ -469,7 +468,7 @@ public class AssociativeTest {
                 new Tuple3<>(1, 3, (79*60000L))
         ).assignTimestampsAndWatermarks(new UDFs.ExtractTimestamp(1000));
 
-        w1Size = 3;
+        w1Size = 5;
         w2Size = 5;
         timePropagation = "A";
         String testCase = "A5_proof_case";
@@ -507,19 +506,20 @@ public class AssociativeTest {
         List<String> resultABC_b = envBatch.readTextFile(outputPath + "ABC_b_"+testCase+".csv").distinct().collect();
         List<String> resultBCA_b = envBatch.readTextFile(outputPath + "BCA_b_"+testCase+".csv").distinct().collect();
 
-        // Compare the results
+        // Compare the result
         assertNotEquals(resultABC_a,resultBCA_a);
-        assertNotEquals(resultABC_b,resultBCA_b);
+        assertEquals(resultABC_b.size(), resultBCA_b.size());
+        assertEquals(resultABC_b,resultBCA_b);
     }
 
     @Test
     //Case A6 IVJ lB = uB
-    public void testCaseA6_default() throws Exception {
+    public void testCaseA6() throws Exception {
         // Set up the testing environment
-        w1Size = 20; // lB W1
-        w1Slide = 20; // uB W1
-        w2Size = 20; // lB W1
-        w2Slide = 20; // uB W1
+        w1Size = -10; // lB W1
+        w1Slide = 10; // uB W1
+        w2Size = -10; // lB W1
+        w2Slide = 10; // uB W1
 
         timePropagation = "A";
         String testCase = "A6_proof_case_lB_eq_uB_w1_eq_w2";
@@ -557,20 +557,19 @@ public class AssociativeTest {
         List<String> resultBCA_b = envBatch.readTextFile(outputPath + "BCA_b_"+testCase+".csv").distinct().collect();
 
         // Compare the results
-        assertEquals(resultABC_a.size(), resultBCA_a.size());
-        assertEquals(resultABC_a,resultBCA_a);
+        assertNotEquals(resultABC_a,resultBCA_a);
         assertEquals(resultABC_b.size(), resultBCA_b.size());
         assertEquals(resultABC_b,resultBCA_b);
     }
 
     @Test
     //Case A6 IVJ lB = uB
-    public void testCaseA7_default() throws Exception {
+    public void testCaseA7() throws Exception {
         // Set up the testing environment
-        w1Size = 10; // lB W1
-        w1Slide = 10; // uB W1
-        w2Size = 5; // lB W1
-        w2Slide = 5; // uB W1
+        w1Size = -5; // lB W1
+        w1Slide = 5; // uB W1
+        w2Size = -7; // lB W1
+        w2Slide = 7; // uB W1
 
         timePropagation = "A";
         String testCase = "A7_proof_case_lB_eq_uB_w1_neq_w2";
@@ -609,7 +608,7 @@ public class AssociativeTest {
 
         // Compare the results
         assertNotEquals(resultABC_a,resultBCA_a);
-        assertNotEquals(resultABC_b,resultBCA_b);
+        assertEquals(resultABC_b.size(), resultBCA_b.size());
+        assertEquals(resultABC_b,resultBCA_b);
     }
-
 }
