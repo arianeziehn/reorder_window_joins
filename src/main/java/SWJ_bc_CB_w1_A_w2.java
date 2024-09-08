@@ -8,15 +8,13 @@ import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.util.Collector;
 import util.UDFs;
 
-import static java.lang.Math.max;
-
 /**
  * This class runs a Sliding Window Join Query with the order [[B X C]^w2 x A]^w1 and returns the stream ABC.
  * parameters:
  * timePropagation: The timestamp (either 'B' or 'C') that is used for the stream BC in [BC x A]^w2
  */
 
-public class SWJ_bc_CBA {
+public class SWJ_bc_CB_w1_A_w2 {
     DataStream<Tuple3<Integer, Integer, Long>> streamC;
     DataStream<Tuple3<Integer, Integer, Long>> streamA;
     DataStream<Tuple3<Integer, Integer, Long>> streamB;
@@ -26,7 +24,7 @@ public class SWJ_bc_CBA {
     Integer w2Slide;
     String timePropagation;
 
-    public SWJ_bc_CBA(DataStream<Tuple3<Integer, Integer, Long>> streamA, DataStream<Tuple3<Integer, Integer, Long>> streamB, DataStream<Tuple3<Integer, Integer, Long>> streamC, int w1Size, int w1Slide, int w2Size, int w2Slide, String timePropagation) {
+    public SWJ_bc_CB_w1_A_w2(DataStream<Tuple3<Integer, Integer, Long>> streamA, DataStream<Tuple3<Integer, Integer, Long>> streamB, DataStream<Tuple3<Integer, Integer, Long>> streamC, int w1Size, int w1Slide, int w2Size, int w2Slide, String timePropagation) {
         this.streamA = streamA;
         this.streamB = streamB;
         this.streamC = streamC;
@@ -42,18 +40,18 @@ public class SWJ_bc_CBA {
         DataStream<Tuple6<Integer, Integer, Long, Integer, Integer, Long>> streamBC = streamC.join(streamB)
                 .where(new UDFs.getKeyT3())
                 .equalTo(new UDFs.getKeyT3())
-                .window(SlidingEventTimeWindows.of(Time.minutes(w2Size), Time.minutes(w2Slide)))
+                .window(SlidingEventTimeWindows.of(Time.minutes(w1Size), Time.minutes(w1Slide)))
                 .apply(new FlatJoinFunction<Tuple3<Integer, Integer, Long>, Tuple3<Integer, Integer, Long>, Tuple6<Integer, Integer, Long, Integer, Integer, Long>>() {
                     @Override
-                    public void join(Tuple3<Integer, Integer, Long> d1, Tuple3<Integer, Integer, Long> d2, Collector<Tuple6<Integer, Integer, Long, Integer, Integer, Long>> collector) throws Exception {
-                        collector.collect(new Tuple6<>(d2.f0, d2.f1, d2.f2, d1.f0, d1.f1, d1.f2));
-                    }
-                }).assignTimestampsAndWatermarks(new UDFs.ExtractTimestampBC(1000, timePropagation));
+                    public void join(Tuple3<Integer, Integer, Long> d2, Tuple3<Integer, Integer, Long> d1, Collector<Tuple6<Integer, Integer, Long, Integer, Integer, Long>> collector) throws Exception {
+                        collector.collect(new Tuple6<>(d1.f0, d1.f1, d1.f2, d2.f0, d2.f1, d2.f2));
+                    }})
+                .assignTimestampsAndWatermarks(new UDFs.ExtractTimestampBC(1000, timePropagation));
 
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC = streamBC.join(streamA)
                 .where(new UDFs.getKeyT6())
                 .equalTo(new UDFs.getKeyT3())
-                .window(SlidingEventTimeWindows.of(Time.minutes(w1Size), Time.minutes(w1Slide)))
+                .window(SlidingEventTimeWindows.of(Time.minutes(w2Size), Time.minutes(w2Slide)))
                 .apply(new FlatJoinFunction<Tuple6<Integer, Integer, Long, Integer, Integer, Long>, Tuple3<Integer, Integer, Long>, Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>>() {
 
                     public void join(Tuple6<Integer, Integer, Long, Integer, Integer, Long> d1, Tuple3<Integer, Integer, Long> d2, Collector<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> collector) throws Exception {

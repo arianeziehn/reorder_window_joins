@@ -14,7 +14,7 @@ import util.UDFs;
  * timePropagation: The timestamp (either 'B' or 'C') that is used for the stream BC in [BC x A]^w2
  */
 
-public class SWJ_bc_BCA {
+public class SWJ_bc_BC_w2_A_w1 {
     DataStream<Tuple3<Integer, Integer, Long>> streamC;
     DataStream<Tuple3<Integer, Integer, Long>> streamA;
     DataStream<Tuple3<Integer, Integer, Long>> streamB;
@@ -25,7 +25,7 @@ public class SWJ_bc_BCA {
     String timePropagation;
 
 
-    public SWJ_bc_BCA(DataStream<Tuple3<Integer, Integer, Long>> streamA, DataStream<Tuple3<Integer, Integer, Long>> streamB, DataStream<Tuple3<Integer, Integer, Long>> streamC, int w1Size, int w1Slide, int w2Size, int w2Slide, String timePropagation) {
+    public SWJ_bc_BC_w2_A_w1(DataStream<Tuple3<Integer, Integer, Long>> streamA, DataStream<Tuple3<Integer, Integer, Long>> streamB, DataStream<Tuple3<Integer, Integer, Long>> streamC, int w1Size, int w1Slide, int w2Size, int w2Slide, String timePropagation) {
         this.streamA = streamA;
         this.streamB = streamB;
         this.streamC = streamC;
