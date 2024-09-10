@@ -10,7 +10,7 @@
 3. think about a PT solution, maybe in seconds and always start at a minute? 
 2. [started, see test java] make CorrectnessCheck automatic, i.e., run all solution (perfectly Case base (C and A Cases)) and check if they are equivalent after removing all duplicates that is no performance evaluation so it can be heavy and only tested local 
 2. Investigate algorithms approach in python folder and implement it. Test for longer queries (Start 4-way Join would be fine I guess) and add to Correctness Test
-
+2. check queries in python/3way_test and implement a set of them, add them to the test cases 
 ## Repository Structure 
 
 ### figures 
@@ -20,8 +20,8 @@ contains the drawio files for the figures in the paper
 ### src/main/java
 contains the join queries, i.e., we right now have: 
 for SWJ: 
-oldStuff_delete.SWJ_a_ABC, containing the query [[A X B]^w1 x C]^w2 with time propagation of timestamp A between w1 and w2 (_a_)
-all other SWJ_a_ queries are permutation of oldStuff_delete.SWJ_a_ABC considering that a is the propagated timestamp
+SWJCluster, containing the query [[A X B]^w1 x C]^w2 with time propagation of timestamp A between w1 and w2 (_a_)
+all other SWJ_a_ queries are permutation of SWJCluster considering that a is the propagated timestamp
 
 #### Util 
 Contains helper function for the join queries

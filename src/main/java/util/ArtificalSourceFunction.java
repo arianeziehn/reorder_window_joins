@@ -11,17 +11,15 @@ public class ArtificalSourceFunction extends RichParallelSourceFunction<Tuple3<I
     public static final int RECORD_SIZE_IN_BYTE = 89;
     private long throughput;
     boolean manipulateIngestionRate;
-    private int windowsize;
     private int numberOfKeys;
     private long startTime;
     private int runtime;
     double freq; // tuples per minute
 
 
-    public ArtificalSourceFunction(long throughput, int windowsize, double freq, int numberOfKeys) {
+    public ArtificalSourceFunction(long throughput, int runtime, double freq, int numberOfKeys) {
         this.numberOfKeys = numberOfKeys;
-        this.runtime = 1; // number of minutes the source function runs
-        this.windowsize = windowsize;
+        this.runtime = runtime;
         this.throughput = throughput;
         this.freq = freq;
         if (throughput == 0) {
