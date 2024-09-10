@@ -515,7 +515,7 @@ public class AssociativeTest {
 
     @Test
     //Case A6 IVJ lB = uB
-    public void testCaseA6() throws Exception {
+    public void testCaseA6_w1_eq_w2() throws Exception {
         // Set up the testing environment
         w1Size = -10; // lB W1
         w1Slide = 10; // uB W1
@@ -565,10 +565,60 @@ public class AssociativeTest {
 
     @Test
     //Case A6 IVJ lB = uB
+    public void testCaseA6_w1_neq_w2() throws Exception {
+        // Set up the testing environment
+        w1Size = -6; // lB W1
+        w1Slide = 6; // uB W1
+        w2Size = -10; // lB W1
+        w2Slide = 10; // uB W1
+
+        timePropagation = "A";
+        String testCase = "A6_proof_case_lB_eq_uB_w1_eq_w2";
+        // Execute each join operation with timestamp of A
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC_a =
+                new IVJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA_a =
+                new IVJ_bc_BCA(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        // Execute each join operation with timestamp of B
+        timePropagation = "B";
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC_b =
+                new IVJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA_b =
+                new IVJ_bc_BCA(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+
+        String outputPath = "./src/main/resources/resultIVJ_";
+        // Collect the results into lists
+        streamABC_a
+                .writeAsText(outputPath + "ABC_a_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        streamBCA_a
+                .writeAsText(outputPath + "BCA_a_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        streamABC_b
+                .writeAsText(outputPath + "ABC_b_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        streamBCA_b
+                .writeAsText(outputPath + "BCA_b_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+
+        env.execute();
+
+        final ExecutionEnvironment envBatch = ExecutionEnvironment.getExecutionEnvironment();
+        envBatch.setParallelism(1);
+
+        List<String> resultABC_a = envBatch.readTextFile(outputPath + "ABC_a_"+testCase+".csv").distinct().collect();
+        List<String> resultBCA_a = envBatch.readTextFile(outputPath + "BCA_a_"+testCase+".csv").distinct().collect();
+        List<String> resultABC_b = envBatch.readTextFile(outputPath + "ABC_b_"+testCase+".csv").distinct().collect();
+        List<String> resultBCA_b = envBatch.readTextFile(outputPath + "BCA_b_"+testCase+".csv").distinct().collect();
+
+        // Compare the results
+        assertNotEquals(resultABC_a,resultBCA_a);
+        assertEquals(resultABC_b.size(), resultBCA_b.size());
+        assertEquals(resultABC_b,resultBCA_b);
+    }
+
+    @Test
+    //Case A6 IVJ lB = uB
     public void testCaseA7() throws Exception {
         // Set up the testing environment
         w1Size = -5; // lB W1
-        w1Slide = 5; // uB W1
+        w1Slide = 0; // uB W1
         w2Size = -7; // lB W1
         w2Slide = 7; // uB W1
 
@@ -609,7 +659,6 @@ public class AssociativeTest {
 
         // Compare the results
         assertNotEquals(resultABC_a,resultBCA_a);
-        assertEquals(resultABC_b.size(), resultBCA_b.size());
-        assertEquals(resultABC_b,resultBCA_b);
+        assertNotEquals(resultABC_b,resultBCA_b);
     }
 }

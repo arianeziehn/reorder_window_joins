@@ -19,9 +19,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.round;
 
 /**
- * This is class runs a Sliding Window Join Queries [[A X B]^w1 x C]^w2
- * parameters:
- * Run with these parameters:
+ * This class runs the combinations of a two way Sliding Window Join Queries [[A X B]^w1 x C]^w2
  */
 
 public class SWJCluster {

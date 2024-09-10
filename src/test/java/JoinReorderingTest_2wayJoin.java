@@ -11,6 +11,7 @@ import util.UDFs;
 
 import java.util.List;
 
+import static java.lang.Math.max;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
@@ -812,17 +813,18 @@ public class JoinReorderingTest_2wayJoin {
         assertNotEquals(resultABC, resultBCA);
         assertNotEquals(resultABC, resultCBA);
     }
+
     @Test
     //Case A6 IVJ lB = uB
-    public void testCaseA7() throws Exception {
+    public void testCaseA6_w1_neq_w2() throws Exception {
         // Set up the testing environment
-        w1Size = -20; // lB W1
-        w1Slide = 20; // uB W1
-        w2Size = -25; // lB W1
-        w2Slide = 25; // uB W1
+        w1Size = -5; // lB W1
+        w1Slide = 5; // uB W1
+        w2Size = -10; // lB W1
+        w2Slide = 10; // uB W1
 
         timePropagation = "A";
-        String testCase = "A7";
+        String testCase = "A6";
         // Execute each join operation with timestamp of A
         //default case
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC =
@@ -876,6 +878,206 @@ public class JoinReorderingTest_2wayJoin {
         assertEquals(resultABC, resultCAB);
         assertEquals(resultABC.size(), resultACB.size());
         assertEquals(resultABC, resultACB);
+        assertNotEquals(resultABC, resultBCA);
+        assertNotEquals(resultABC, resultCBA);
+    }
+    @Test
+    //Case A6 IVJ lB = uB
+    public void testCaseA7_w1() throws Exception {
+        // Set up the testing environment
+        w1Size = -10; // lB W1
+        w1Slide = 5; // uB W1
+        w2Size = -20; // lB W1
+        w2Slide = 20; // uB W1
+
+        timePropagation = "A";
+        String testCase = "A7";
+        // Execute each join operation with timestamp of A
+        //default case
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC =
+                new IVJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBAC =
+                new IVJ_ab_BAC(streamA, streamB, streamC, -w1Slide, -w1Size, w2Size, w2Slide, timePropagation).run();
+        // this works via time Propagation of a.ts by default
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamACB =
+                new IVJ_ac_ACB(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        // consequently via commutativity this one also
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamCAB =
+                new IVJ_ac_CAB(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        // same problem as in A! there b and c can be so far apart that they do not occur together in a window
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA =
+                new IVJ_bc_BCA(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamCBA =
+                new IVJ_bc_CBA(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+
+        String outputPath = "./src/main/resources/resultSeWJ_";
+        // Collect the results into lists
+        streamABC
+                .writeAsText(outputPath + "ABC_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        streamBAC
+                .writeAsText(outputPath + "BAC_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        streamACB
+                .writeAsText(outputPath + "ACB_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        streamCAB
+                .writeAsText(outputPath + "CAB_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        streamBCA
+                .writeAsText(outputPath + "BCA_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        streamCBA
+                .writeAsText(outputPath + "CBA_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+
+        env.execute();
+
+        final ExecutionEnvironment envBatch = ExecutionEnvironment.getExecutionEnvironment();
+        envBatch.setParallelism(1);
+
+        List<String> resultABC = envBatch.readTextFile(outputPath + "ABC_" + testCase + ".csv").distinct().collect();
+        List<String> resultBAC = envBatch.readTextFile(outputPath + "BAC_" + testCase + ".csv").distinct().collect();
+        List<String> resultACB = envBatch.readTextFile(outputPath + "ACB_" + testCase + ".csv").distinct().collect();
+        List<String> resultCAB = envBatch.readTextFile(outputPath + "CAB_" + testCase + ".csv").distinct().collect();
+        List<String> resultBCA = envBatch.readTextFile(outputPath + "BCA_" + testCase + ".csv").distinct().collect();
+        List<String> resultCBA = envBatch.readTextFile(outputPath + "CBA_" + testCase + ".csv").distinct().collect();
+
+        // Compare the results
+        assertEquals(resultABC.size(), resultBAC.size());
+        assertEquals(resultABC, resultBAC);
+        assertEquals(resultABC.size(), resultCAB.size());
+        assertEquals(resultABC, resultCAB);
+        assertEquals(resultABC.size(), resultACB.size());
+        assertEquals(resultABC, resultACB);
+        assertNotEquals(resultABC, resultBCA);
+        assertNotEquals(resultABC, resultCBA);
+    }
+
+    @Test
+    //Case A6 IVJ lB = uB
+    public void testCaseA7_w2() throws Exception {
+        // Set up the testing environment
+        w1Size = -10; // lB W1
+        w1Slide = 10; // uB W1
+        w2Size = -10; // lB W1
+        w2Slide = 20; // uB W1
+
+        timePropagation = "A";
+        String testCase = "A7";
+        // Execute each join operation with timestamp of A
+        //default case
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC =
+                new IVJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBAC =
+                new IVJ_ab_BAC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        // this works via time Propagation of a.ts by default
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamACB =
+                new IVJ_ac_ACB(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        // consequently via commutativity this one also
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamCAB =
+                new IVJ_ac_CAB(streamA, streamB, streamC, w1Size, w1Slide, -w2Slide, -w2Size, timePropagation).run();
+        // same problem as in A! there b and c can be so far apart that they do not occur together in a window
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA =
+                new IVJ_bc_BCA(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamCBA =
+                new IVJ_bc_CBA(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+
+        String outputPath = "./src/main/resources/resultSeWJ_";
+        // Collect the results into lists
+        streamABC
+                .writeAsText(outputPath + "ABC_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        streamBAC
+                .writeAsText(outputPath + "BAC_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        streamACB
+                .writeAsText(outputPath + "ACB_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        streamCAB
+                .writeAsText(outputPath + "CAB_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        streamBCA
+                .writeAsText(outputPath + "BCA_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        streamCBA
+                .writeAsText(outputPath + "CBA_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+
+        env.execute();
+
+        final ExecutionEnvironment envBatch = ExecutionEnvironment.getExecutionEnvironment();
+        envBatch.setParallelism(1);
+
+        List<String> resultABC = envBatch.readTextFile(outputPath + "ABC_" + testCase + ".csv").distinct().collect();
+        List<String> resultBAC = envBatch.readTextFile(outputPath + "BAC_" + testCase + ".csv").distinct().collect();
+        List<String> resultACB = envBatch.readTextFile(outputPath + "ACB_" + testCase + ".csv").distinct().collect();
+        List<String> resultCAB = envBatch.readTextFile(outputPath + "CAB_" + testCase + ".csv").distinct().collect();
+        List<String> resultBCA = envBatch.readTextFile(outputPath + "BCA_" + testCase + ".csv").distinct().collect();
+        List<String> resultCBA = envBatch.readTextFile(outputPath + "CBA_" + testCase + ".csv").distinct().collect();
+
+        // Compare the results
+        assertEquals(resultABC.size(), resultBAC.size());
+        assertEquals(resultABC, resultBAC);
+        assertEquals(resultABC.size(), resultACB.size());
+        assertEquals(resultABC, resultACB);
+        assertEquals(resultABC.size(), resultCAB.size());
+        assertEquals(resultABC, resultCAB);
+        assertNotEquals(resultABC, resultBCA);
+        assertNotEquals(resultABC, resultCBA);
+    }
+
+    @Test
+    //Case A6 IVJ lB = uB
+    public void testCaseA7_w1_and_w2() throws Exception {
+        // Set up the testing environment
+        w1Size = -5; // lB W1
+        w1Slide = 10; // uB W1
+        w2Size = -10; // lB W1
+        w2Slide = 20; // uB W1
+
+        timePropagation = "A";
+        String testCase = "A7";
+        // Execute each join operation with timestamp of A
+        //default case
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC =
+                new IVJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBAC =
+                new IVJ_ab_BAC(streamA, streamB, streamC, -w1Slide, -w1Size, w2Size, w2Slide, timePropagation).run();
+        // this works via time Propagation of a.ts by default
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamACB =
+                new IVJ_ac_ACB(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        // consequently via commutativity this one also
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamCAB =
+                new IVJ_ac_CAB(streamA, streamB, streamC, w1Size, w1Slide, -w2Slide, -w2Size, timePropagation).run();
+        // same problem as in A! there b and c can be so far apart that they do not occur together in a window
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA =
+                new IVJ_bc_BCA(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamCBA =
+                new IVJ_bc_CBA(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+
+        String outputPath = "./src/main/resources/resultSeWJ_";
+        // Collect the results into lists
+        streamABC
+                .writeAsText(outputPath + "ABC_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        streamBAC
+                .writeAsText(outputPath + "BAC_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        streamACB
+                .writeAsText(outputPath + "ACB_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        streamCAB
+                .writeAsText(outputPath + "CAB_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        streamBCA
+                .writeAsText(outputPath + "BCA_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        streamCBA
+                .writeAsText(outputPath + "CBA_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+
+        env.execute();
+
+        final ExecutionEnvironment envBatch = ExecutionEnvironment.getExecutionEnvironment();
+        envBatch.setParallelism(1);
+
+        List<String> resultABC = envBatch.readTextFile(outputPath + "ABC_" + testCase + ".csv").distinct().collect();
+        List<String> resultBAC = envBatch.readTextFile(outputPath + "BAC_" + testCase + ".csv").distinct().collect();
+        List<String> resultACB = envBatch.readTextFile(outputPath + "ACB_" + testCase + ".csv").distinct().collect();
+        List<String> resultCAB = envBatch.readTextFile(outputPath + "CAB_" + testCase + ".csv").distinct().collect();
+        List<String> resultBCA = envBatch.readTextFile(outputPath + "BCA_" + testCase + ".csv").distinct().collect();
+        List<String> resultCBA = envBatch.readTextFile(outputPath + "CBA_" + testCase + ".csv").distinct().collect();
+
+        // Compare the results
+        assertEquals(resultABC.size(), resultBAC.size());
+        assertEquals(resultABC, resultBAC);
+        assertEquals(resultABC.size(), resultACB.size());
+        assertEquals(resultABC, resultACB);
+        assertEquals(resultABC.size(), resultCAB.size());
+        assertEquals(resultABC, resultCAB);
         assertNotEquals(resultABC, resultBCA);
         assertNotEquals(resultABC, resultCBA);
     }
