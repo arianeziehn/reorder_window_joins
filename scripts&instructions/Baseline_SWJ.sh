@@ -4,7 +4,7 @@ stopflink='/home/ziehn-ldap/flink-1.11.6/bin/stop-cluster.sh'
 flink='/home/ziehn-ldap/flink-1.11.6/bin/flink'
 resultFile='/local-ssd/ziehn-ldap/BaselineExp_Joins.txt'
 jar='/home/ziehn-ldap/flink-joinOrder-1.0-SNAPSHOT.jar'
-output_path='/home/ziehn-ldap/result'
+output_path='/local-ssd/ziehn-ldap/result_SWJ'
 
 now=$(date +"%T")
 today=$(date +%d.%m.%y)
@@ -20,7 +20,7 @@ for loop in 1; do
       echo "Flink start" >>$resultFile
       $startflink
       START=$(date +%s)
-      $flink run -c SWJCluster $jar --output $output_path --tput 75 --w1size 5 --w1slide $slide --w2slide $slide --w2size 30 --run 25 --order $order --freqA 4 --freqB 2 --para 6 --keys 32
+      $flink run -c SWJCluster $jar --output $output_path --tput 75 --w1size 5 --w1slide $slide --w2slide $slide --w2size 30 --run 25 --order $order --freqA 4 --freqB 2 --para 2 --keys 16
       END=$(date +%s)
       DIFF=$((END - START))
       # shellcheck disable=SC2027
@@ -38,7 +38,7 @@ for loop in 1; do
       echo "Flink start" >>$resultFile
       $startflink
       START=$(date +%s)
-      $flink run -c SWJCluster $jar --output $output_path --tput 75 --w1size 30 --w1slide $slide --w2slide $slide --w2size 5 --run 25 --order $order --freqA 4 --freqB 2 --para 6 --keys 32
+      $flink run -c SWJCluster $jar --output $output_path --tput 75 --w1size 30 --w1slide $slide --w2slide $slide --w2size 5 --run 25 --order $order --freqA 4 --freqB 2 --para 2 --keys 16
       END=$(date +%s)
       DIFF=$((END - START))
       # shellcheck disable=SC2027
@@ -56,7 +56,7 @@ for loop in 1; do
       echo "Flink start" >>$resultFile
       $startflink
       START=$(date +%s)
-      $flink run -c SWJCluster $jar --output $output_path --tput 75 --w1size 30 --w1slide $slide --w2slide $slide --w2size 30 --run 25 --order $order --freqA 4 --freqB 2 --para 6 --keys 32
+      $flink run -c SWJCluster $jar --output $output_path --tput 75 --w1size 30 --w1slide $slide --w2slide $slide --w2size 30 --run 25 --order $order --freqA 4 --freqB 2 --para 2 --keys 16
       END=$(date +%s)
       DIFF=$((END - START))
       echo "SWJ_"$order" run w1(5,"$slide") w2(30,"$slide")"$loop " : "$DIFF"s" >>$resultFile
@@ -75,7 +75,7 @@ for loop in 1; do
   echo "Flink start" >>$resultFile
   $startflink
   START=$(date +%s)
-  $flink run -c SWJCluster $jar --output $output_path --tput 40 --w1size 30 --w1slide $slide --w2slide $slide --w2size 30 --run 25 --order $order --freqA 4 --freqB 2 --para 6 --keys 32
+  $flink run -c SWJCluster $jar --output $output_path --tput 40 --w1size 30 --w1slide $slide --w2slide $slide --w2size 30 --run 25 --order $order --freqA 4 --freqB 2 --para 2 --keys 16
   END=$(date +%s)
   DIFF=$((END - START))
   echo "SWJ_"$order" run w1(5,"$slide") w2(30,"$slide")"$loop " : "$DIFF"s" >>$resultFile
@@ -92,7 +92,7 @@ for loop in 1; do
   echo "Flink start" >>$resultFile
   $startflink
   START=$(date +%s)
-  $flink run -c SWJCluster $jar --output $output_path --tput 40 --w1size 30 --w1slide $slide --w2slide $slide --w2size 30 --run 25 --order $order --freqA 4 --freqB 2 --para 6 --keys 32
+  $flink run -c SWJCluster $jar --output $output_path --tput 40 --w1size 30 --w1slide $slide --w2slide $slide --w2size 30 --run 25 --order $order --freqA 4 --freqB 2 --para 2 --keys 16
   END=$(date +%s)
   DIFF=$((END - START))
   echo "SWJ_"$order" run w1(5,"$slide") w2(30,"$slide")"$loop " : "$DIFF"s" >>$resultFile

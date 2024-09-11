@@ -73,7 +73,6 @@ public class IVJCluster {
         if (joinOrder.equals("ABC")) { // that is the original query
             System.out.println(joinOrder + "with Windows w1 (" + w1lB + ";" +w1uB + ") and w2 (" + w2lB + ";" +w2uB + ").");
             resultStream = new IVJ_ab_ABC(streamA, streamB, streamC, w1lB, w1uB, w2lB, w2uB, timePropagation).run();
-            outputPath += "_ABC.csv";
         }
         else {
             boolean w1_equal = Math.abs(w1lB) == (Math.abs(w1uB));

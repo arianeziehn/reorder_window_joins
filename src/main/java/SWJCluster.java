@@ -77,7 +77,6 @@ public class SWJCluster {
         if (joinOrder.equals("ABC")) { // that is the original query
             System.out.println(joinOrder + "with Windows w1 (" + w1Size + ";" +w1Slide + ") and w2 (" + w2Size + ";" +w2Slide + ").");
             resultStream = new SWJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
-            outputPath += "_ABC.csv";
         }
         else if (joinOrder.equals("BAC")) { // this is commutative it works without any 'magic' akka default
             System.out.println(joinOrder + "with Windows w1 (" + w1Size + ";" +w1Slide + ") and w2 (" + w2Size + ";" +w2Slide + ").");
