@@ -91,7 +91,7 @@ public class SWJCluster {
             System.out.println(joinOrder + "with Windows w1 (" + w1Size + ";" +w1Slide + ") and w2 (" + w2Size + ";" +w2Slide + ").");
             resultStream = new SWJ_ac_CA_w2_B_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         }
-        else if (joinOrder.equals("BCA") && w1Slide >= w1Size && w2Slide >= w2Slide) {
+        else if (joinOrder.equals("BCA") && w1Slide >= w1Size && w2Slide >= w2Size) {
 
             if (w1Size > w2Size) {
                 System.out.println(joinOrder + "with Windows smaller w1 (" + w1Size + ";" +w1Slide + ") and larger w2 (" + w2Size + ";" +w2Slide + ").");
@@ -103,7 +103,7 @@ public class SWJCluster {
             }
 
         }
-        else if (joinOrder.equals("CBA") && w1Slide >= w1Size && w2Slide >= w2Slide) {
+        else if (joinOrder.equals("CBA") && w1Slide >= w1Size && w2Slide >= w2Size) {
             if (w1Size > w2Size) {
                 System.out.println(joinOrder + "with Windows smaller w1 (" + w1Size + ";" +w1Slide + ") and larger w2 (" + w2Size + ";" +w2Slide + ").");
                 timePropagation = "C";

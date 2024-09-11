@@ -492,13 +492,11 @@ public class JoinReorderingTest_2wayJoin_QnV {
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBAC =
                 new SeWJ_ab_BAC(streamA, streamB, streamC, w1Size, w2Size, timePropagation).run();
         // this works via time Propagation of a.ts by default
-        timePropagation = "A";
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamACB =
                 new SeWJ_ac_ACB(streamA, streamB, streamC, w1Size, w2Size, timePropagation).run();
         // consequently via commutativity this one also
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamCAB =
                 new SeWJ_ac_CAB(streamA, streamB, streamC, w1Size, w2Size, timePropagation).run();
-        timePropagation = "B";
         // same problem as in A! there b and c can be so far apart that they do not occur together in a window
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA =
                 new SeWJ_bc_BCA(streamA, streamB, streamC, w1Size, w2Size, timePropagation).run();
@@ -536,9 +534,11 @@ public class JoinReorderingTest_2wayJoin_QnV {
         assertEquals(resultABC.size(), resultBAC.size());
         assertEquals(resultABC,resultBAC);
         assertNotEquals(resultABC,resultACB);
+        assertEquals(resultCAB,resultACB);
         assertNotEquals(resultABC,resultCAB);
         assertNotEquals(resultABC,resultBCA);
         assertNotEquals(resultABC,resultCBA);
+        assertEquals(resultCBA,resultBCA);
     }
 
     @Test

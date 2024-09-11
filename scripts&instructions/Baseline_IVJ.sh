@@ -10,27 +10,27 @@ now=$(date +"%T")
 today=$(date +%d.%m.%y)
 echo "Current time : $today $now" >>$resultFile
 echo "----------$today $now------------" >>$resultFile
-for loop in 1 ; do
-  for order in ABC ACB BAC CAB ; do
-    for lb in 10 0 ; do
-      for ub in 0 10 20 ; do
+for loop in 1; do
+  for order in ABC ACB BAC CAB; do
+    for lb in 10 0; do
+      for ub in 10 20; do
       now=$(date +"%T")
       today=$(date +%d.%m.%y)
       echo "Current time : $today $now" >>$resultFile
       echo "Flink start" >>$resultFile
       $startflink
       START=$(date +%s)
-      $flink run -c IVJCluster $jar --output $output_path --tput 1000 --w1lB $lb --w1uB $ub --w2lB $lb --w2uB $ub --run 25 --order $order --freqA 4 --freqB 2 --para 6 --keys 32
+      $flink run -c IVJCluster $jar --output $output_path --tput 150 --w1lB $lb --w1uB $ub --w2lB $lb --w2uB $ub --run 25 --order $order --freqA 4 --freqB 2 --para 6 --keys 32
       END=$(date +%s)
       DIFF=$((END - START))
       # shellcheck disable=SC2027
       echo "IVJ_"$order" run w1("$lb","$ub') w2('$lb','$ub')'$loop " : "$DIFF"s" >>$resultFile
       $stopflink
       echo "------------ Flink stopped ------------" >>$resultFile
-      cp '/home/ziehn-ldap/flink-1.11.6_W/log/''flink-ziehn-ldap -taskexecutor-1-sr630-wn-a-48.out' '/home/ziehn-ldap/BaselineExp/result_IVJ/FOut_'$lb'_'$ub'_'$order'_'$loop'.txt'
-      cp '/home/ziehn-ldap/flink-1.11.6_W/log/''flink-ziehn-ldap -taskexecutor-0-sr630-wn-a-48.out' '/home/ziehn-ldap/BaselineExp/result_IVJ/FOut_'$lb'_'$ub'_'$order'_'$loop'.txt'
-      cp '/home/ziehn-ldap/flink-1.11.6_W/log/''flink-ziehn-ldap -taskexecutor-1-sr630-wn-a-48.log' '/home/ziehn-ldap/BaselineExp/result_IVJ/FLog_'$lb'_'$ub'_'$order'_'$loop'.txt'
-      cp '/home/ziehn-ldap/flink-1.11.6_W/log/''flink-ziehn-ldap -taskexecutor-0-sr630-wn-a-48.log' '/home/ziehn-ldap/BaselineExp/result_IVJ/FLog_'$lb'_'$ub'_'$order'_'$loop'.txt'
+      cp '/home/ziehn-ldap/flink-1.11.6_W/log/''flink-ziehn-ldap -taskexecutor-1-sr630-wn-a-48.out' '/home/ziehn-ldap/BaselineExp/result_IVJ/FOut_IVJ'$lb'_'$ub'_'$order'_'$loop'.txt'
+      cp '/home/ziehn-ldap/flink-1.11.6_W/log/''flink-ziehn-ldap -taskexecutor-0-sr630-wn-a-48.out' '/home/ziehn-ldap/BaselineExp/result_IVJ/FOut_IVJ'$lb'_'$ub'_'$order'_'$loop'.txt'
+      cp '/home/ziehn-ldap/flink-1.11.6_W/log/''flink-ziehn-ldap -taskexecutor-1-sr630-wn-a-48.log' '/home/ziehn-ldap/BaselineExp/result_IVJ/FLog_IVJ'$lb'_'$ub'_'$order'_'$loop'.txt'
+      cp '/home/ziehn-ldap/flink-1.11.6_W/log/''flink-ziehn-ldap -taskexecutor-0-sr630-wn-a-48.log' '/home/ziehn-ldap/BaselineExp/result_IVJ/FLog_IVJ'$lb'_'$ub'_'$order'_'$loop'.txt'
   done
   done
 done
