@@ -34,15 +34,19 @@ public class SWJCluster {
         Integer w1Slide = parameters.getInt("w1slide", 10);
         Integer w2Size = parameters.getInt("w2size", 20);
         Integer w2Slide = parameters.getInt("w2slide", 10);
-        long throughput = parameters.getLong("tput", 1000); //for me at least rather heavy already
-        int freqA = parameters.getInt("freqA", 1); // 1 tuples per minute that is how to play with selective
-        int freqB = parameters.getInt("freqB", 1);
+        long throughput = parameters.getLong("tput", 100); //for me at least rather heavy already
+        int freqA = parameters.getInt("freqA", 30); // 1 tuples per minute that is how to play with selective
+        int freqB = parameters.getInt("freqB", 15);
         int freqC = parameters.getInt("freqC", 1);
-        int parallelism = parameters.getInt("para", 5);
-        int runtime = parameters.getInt("run", 25);
+        int parallelism = parameters.getInt("para", 16);
+        int runtime = parameters.getInt("run", 1);
         String joinOrder = parameters.get("order", "ABC");
         // 1 * 20 = 20 tuples per window per stream
         // 20*20 for window one * 20 for third window
+        int maxFreq = max(max(freqA,freqB),freqC);
+        long throughputA = (long) (throughput*((double) (freqA)/(maxFreq)));
+        long throughputB = (long) (throughput * ((double) (freqB)/(maxFreq)));
+        long throughputC = (long) (throughput*((double) (freqC)/(maxFreq)));
         String timePropagation = parameters.get("tProp", "A");
 
         String outputPath;
@@ -55,21 +59,21 @@ public class SWJCluster {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
 
-        DataStream<Tuple3<Integer, Integer, Long>> streamA = env.addSource(new ArtificalSourceFunction(throughput, runtime, freqA, numberOfKeys))
+        DataStream<Tuple3<Integer, Integer, Long>> streamA = env.addSource(new ArtificalSourceFunction(throughputA, runtime, freqA, numberOfKeys))
                 .setParallelism(parallelism)
                 .assignTimestampsAndWatermarks(new UDFs.ExtractTimestamp(60000)); // as we consider Minutes
 
-        DataStream<Tuple3<Integer, Integer, Long>> streamB = env.addSource(new ArtificalSourceFunction(throughput, runtime, freqB, numberOfKeys))
+        DataStream<Tuple3<Integer, Integer, Long>> streamB = env.addSource(new ArtificalSourceFunction(throughputB, runtime, freqB, numberOfKeys))
                 .setParallelism(parallelism)
                 .assignTimestampsAndWatermarks(new UDFs.ExtractTimestamp(60000));
 
-        DataStream<Tuple3<Integer, Integer, Long>> streamC = env.addSource(new ArtificalSourceFunction(throughput, runtime, freqC, numberOfKeys))
+        DataStream<Tuple3<Integer, Integer, Long>> streamC = env.addSource(new ArtificalSourceFunction(throughputC, runtime, freqC, numberOfKeys))
                 .setParallelism(parallelism)
                 .assignTimestampsAndWatermarks(new UDFs.ExtractTimestamp(60000));
 
-        streamA.flatMap(new ThroughputLogger<Tuple3<Integer, Integer, Long>>(ArtificalSourceFunction.RECORD_SIZE_IN_BYTE, throughput));
-        streamB.flatMap(new ThroughputLogger<Tuple3<Integer, Integer, Long>>(ArtificalSourceFunction.RECORD_SIZE_IN_BYTE, throughput));
-        streamC.flatMap(new ThroughputLogger<Tuple3<Integer, Integer, Long>>(ArtificalSourceFunction.RECORD_SIZE_IN_BYTE, throughput));
+        streamA.flatMap(new ThroughputLogger<Tuple3<Integer, Integer, Long>>(ArtificalSourceFunction.RECORD_SIZE_IN_BYTE, throughputA));
+        streamB.flatMap(new ThroughputLogger<Tuple3<Integer, Integer, Long>>(ArtificalSourceFunction.RECORD_SIZE_IN_BYTE, throughputB));
+        streamC.flatMap(new ThroughputLogger<Tuple3<Integer, Integer, Long>>(ArtificalSourceFunction.RECORD_SIZE_IN_BYTE, throughputC));
 
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> resultStream;
 

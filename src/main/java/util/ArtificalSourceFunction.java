@@ -8,7 +8,7 @@ import java.util.Random;
 
 public class ArtificalSourceFunction extends RichParallelSourceFunction<Tuple3<Integer, Integer, Long>> {
     private volatile boolean isRunning = true;
-    public static final int RECORD_SIZE_IN_BYTE = 89;
+    public static final int RECORD_SIZE_IN_BYTE = 16;
     private long throughput;
     boolean manipulateIngestionRate;
     private int numberOfKeys;
@@ -82,7 +82,7 @@ public class ArtificalSourceFunction extends RichParallelSourceFunction<Tuple3<I
                  }*/
             }
 
-            millisSinceEpoch += (60000L / freq); //increase event time by 1 minute/ freq
+            millisSinceEpoch += ((60000L*60) / freq); //increase event time by 1 minute/ freq
 
             // check if the tuple counts equals the defined throughput (per second)
             if (tupleCounter >= throughput && manipulateIngestionRate) {
