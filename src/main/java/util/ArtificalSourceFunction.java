@@ -9,7 +9,7 @@ import java.util.Random;
 public class ArtificalSourceFunction extends RichParallelSourceFunction<Tuple3<Integer, Integer, Long>> {
     private volatile boolean isRunning = true;
     public static final int RECORD_SIZE_IN_BYTE = 16;
-    private long throughput;
+    private final long throughput;
     boolean manipulateIngestionRate;
     private int numberOfKeys;
     private long startTime;
@@ -22,11 +22,7 @@ public class ArtificalSourceFunction extends RichParallelSourceFunction<Tuple3<I
         this.runtime = runtime;
         this.throughput = throughput;
         this.freq = freq;
-        if (throughput == 0) {
-            this.manipulateIngestionRate = false;
-        } else {
-            this.manipulateIngestionRate = true;
-        }
+        this.manipulateIngestionRate = throughput != 0;
     }
 
     /***
@@ -64,22 +60,6 @@ public class ArtificalSourceFunction extends RichParallelSourceFunction<Tuple3<I
             } else {
                 run = false;
                 //TODO that code produces duplicates
-                /**int keyP = this.getRuntimeContext().getIndexOfThisSubtask();
-                 if(keyP < this.sensors){
-                 KeyedDataPointGeneral velEvent = new VelocityEvent(Integer.toString(keyP),
-                 millisSinceEpoch, velocity, longitude, latitude);
-
-                 sourceContext.collect(velEvent);
-                 tupleCounter++;
-
-                 KeyedDataPointGeneral quaEvent = new QuantityEvent(Integer.toString(keyP),
-                 millisSinceEpoch, quantity, longitude, latitude);
-
-                 sourceContext.collect(quaEvent);
-                 tupleCounter++;
-                 }else{
-                 run = false;
-                 }*/
             }
 
             millisSinceEpoch += ((60000L*60) / freq); //increase event time by 1 minute/ freq
@@ -97,12 +77,14 @@ public class ArtificalSourceFunction extends RichParallelSourceFunction<Tuple3<I
             }
             if ((now - this.startTime) >= this.runtime * 60000L) {
                 System.out.println("stop");
+                cancel();
                 run = false;
                 break;
             }
         }
     }
 
+    @Override
     public void cancel() {
         this.isRunning = false;
     }

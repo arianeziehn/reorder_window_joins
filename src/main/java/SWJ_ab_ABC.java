@@ -8,8 +8,6 @@ import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.util.Collector;
 import util.UDFs;
 
-import static java.lang.Math.max;
-
 /**
  * This class runs a Sliding Window Join Query with the order [[A X B]^w1 x C]^w2 and returns the stream ABC.
  * assumption: default query
