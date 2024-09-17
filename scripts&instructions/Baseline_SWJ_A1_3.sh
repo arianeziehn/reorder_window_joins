@@ -21,8 +21,8 @@ for loop in 1 2 3; do
       echo "Flink start" >>$resultFile
       $startflink
       START=$(date +%s)
-      # works for 500 but it takes really lon, reduce a tiny bit
-      $flink run -c SWJCluster $jar --output $output_path --tput 400 --w1size 20 --w1slide 1 --w2slide 1 --w2size 20 --run 25 --order CAB --freqA 30 --freqB 15 --para 16 --keys 16
+      # works for 400 but it takes really lon, reduce a tiny bit (11944s) 200 (6340)
+      $flink run -c SWJCluster $jar --output $output_path --tput 100 --w1size 20 --w1slide 1 --w2slide 1 --w2size 20 --run 25 --order CAB --freqA 30 --freqB 15 --para 16 --keys 16
       END=$(date +%s)
       DIFF=$((END - START))
       echo "SWJ_CAB_A1 run w1(20,1) w2(20,1)"$loop " : "$DIFF"s" >>$resultFile
@@ -39,8 +39,8 @@ for loop in 1 2 3; do
       echo "Flink start" >>$resultFile
       $startflink
       START=$(date +%s)
-      # 1935s but 500 MST worked
-      $flink run -c SWJCluster $jar --output $output_path --tput 400 --w1size 20 --w1slide 1 --w2slide 1 --w2size 10 --run 25 --order CAB --freqA 30 --freqB 15 --para 16 --keys 16
+      # 1935s but 500 MST worked 400 4131s 300 (3548)
+      $flink run -c SWJCluster $jar --output $output_path --tput 200 --w1size 20 --w1slide 1 --w2slide 1 --w2size 10 --run 25 --order CAB --freqA 30 --freqB 15 --para 16 --keys 16
       END=$(date +%s)
       DIFF=$((END - START))
       echo "SWJ_CAB_A3 run w1(20,1) w2(10,1)"$loop " : "$DIFF"s" >>$resultFile
@@ -57,8 +57,8 @@ for loop in 1 2 3; do
       echo "Flink start" >>$resultFile
       $startflink
       START=$(date +%s)
-      # 2000 is too much, 1000 works, we try 1500
-      $flink run -c SWJCluster $jar --output $output_path --tput 900 --w1size 20 --w1slide 10 --w2slide 10 --w2size 20 --run 25 --order CAB --freqA 30 --freqB 15 --para 16 --keys 16
+      # 2000 is too much, 1000 works, we try 1500, 900 also works (1751s), 850 (1736)
+      $flink run -c SWJCluster $jar --output $output_path --tput 1000 --w1size 20 --w1slide 10 --w2slide 10 --w2size 20 --run 25 --order CAB --freqA 30 --freqB 15 --para 16 --keys 16
       END=$(date +%s)
       DIFF=$((END - START))
       echo "SWJ_CAB_A1 run w1(20,10) w2(20,10)"$loop " : "$DIFF"s" >>$resultFile
@@ -75,11 +75,11 @@ for loop in 1 2 3; do
       echo "Flink start" >>$resultFile
       $startflink
       START=$(date +%s)
-      # 2000 worked with 1935 s reduce a bit
-      $flink run -c SWJCluster $jar --output $output_path --tput 1800 --w1size 20 --w1slide 10 --w2slide 10 --w2size 15 --run 25 --order CAB --freqA 30 --freqB 15 --para 16 --keys 16
+      # 1600 MST
+      $flink run -c SWJCluster $jar --output $output_path --tput 1600 --w1size 20 --w1slide 10 --w2slide 10 --w2size 15 --run 25 --order CAB --freqA 30 --freqB 15 --para 16 --keys 16
       END=$(date +%s)
       DIFF=$((END - START))
-      echo "SWJ_CAB run w1(20,10) w2(15,10)"$loop " : "$DIFF"s" >>$resultFile
+      echo "SWJ_CAB_A3 run w1(20,10) w2(15,10)"$loop " : "$DIFF"s" >>$resultFile
       $stopflink
       echo "------------ Flink stopped ------------" >>$resultFile
       cp '/home/ziehn-ldap/flink-1.11.6_SWJ/log/''flink-ziehn-ldap -taskexecutor-1-sr630-wn-a-13.out' '/home/ziehn-ldap/BaselineExp/result_SWJ_A1_3/FOut_A3_s10_CAB_'$loop'.txt'
@@ -94,7 +94,7 @@ for loop in 1 2 3; do
     echo "Flink start" >>$resultFile
     $startflink
     START=$(date +%s)
-    $flink run -c SWJCluster $jar --output $output_path --tput 250 --w1size 20 --w1slide 1 --w2slide 1 --w2size 20 --run 25 --order BAC --freqA 30 --freqB 15 --para 16 --keys 16
+    $flink run -c SWJCluster $jar --output $output_path --tput 50 --w1size 20 --w1slide 1 --w2slide 1 --w2size 20 --run 25 --order BAC --freqA 30 --freqB 15 --para 16 --keys 16
     END=$(date +%s)
     DIFF=$((END - START))
     echo "SWJ_BAC run w1(20,1) w2(20,1)"$loop " : "$DIFF"s" >>$resultFile
@@ -111,7 +111,7 @@ for loop in 1 2 3; do
     echo "Flink start" >>$resultFile
     $startflink
     START=$(date +%s)
-    $flink run -c SWJCluster $jar --output $output_path --tput 250 --w1size 20 --w1slide 1 --w2slide 1 --w2size 10 --run 25 --order BAC --freqA 30 --freqB 15 --para 16 --keys 16
+    $flink run -c SWJCluster $jar --output $output_path --tput 75 --w1size 20 --w1slide 1 --w2slide 1 --w2size 10 --run 25 --order BAC --freqA 30 --freqB 15 --para 16 --keys 16
     END=$(date +%s)
     DIFF=$((END - START))
     echo "SWJ_BAC_A3 run w1(20,1) w2(10,1)"$loop " : "$DIFF"s" >>$resultFile
@@ -128,8 +128,8 @@ for loop in 1 2 3; do
     echo "Flink start" >>$resultFile
     $startflink
     START=$(date +%s)
-    # 2000 is too much, 1000 works, we try 1500
-    $flink run -c SWJCluster $jar --output $output_path --tput 900 --w1size 20 --w1slide 10 --w2slide 10 --w2size 20 --run 25 --order BAC --freqA 30 --freqB 15 --para 16 --keys 16
+    # 850 MST
+    $flink run -c SWJCluster $jar --output $output_path --tput 850 --w1size 20 --w1slide 10 --w2slide 10 --w2size 20 --run 25 --order BAC --freqA 30 --freqB 15 --para 16 --keys 16
     END=$(date +%s)
     DIFF=$((END - START))
     echo "SWJ_BAC_A1 run w1(20,10) w2(20,10)"$loop " : "$DIFF"s" >>$resultFile
@@ -146,7 +146,7 @@ for loop in 1 2 3; do
     echo "Flink start" >>$resultFile
     $startflink
     START=$(date +%s)
-    # 2000 is too much
+    # 1000 is MST
     $flink run -c SWJCluster $jar --output $output_path --tput 1000 --w1size 20 --w1slide 10 --w2slide 10 --w2size 15 --run 25 --order BAC --freqA 30 --freqB 15 --para 16 --keys 16
     END=$(date +%s)
     DIFF=$((END - START))
@@ -165,8 +165,8 @@ for loop in 1 2 3; do
     echo "Flink start" >>$resultFile
     $startflink
     START=$(date +%s)
-    # works but also takes long 14000s (as CAB)
-    $flink run -c SWJCluster $jar --output $output_path --tput 400 --w1size 20 --w1slide 1 --w2slide 1 --w2size 20 --run 25 --order ACB --freqA 30 --freqB 15 --para 16 --keys 16
+    # works but also takes long 14000s (as CAB), 400 11944, 200 is 6305s
+    $flink run -c SWJCluster $jar --output $output_path --tput 100 --w1size 20 --w1slide 1 --w2slide 1 --w2size 20 --run 25 --order ACB --freqA 30 --freqB 15 --para 16 --keys 16
     END=$(date +%s)
     DIFF=$((END - START))
     echo "SWJ_ACB_A1 run w1(20,1) w2(20,1)"$loop " : "$DIFF"s" >>$resultFile
@@ -182,11 +182,11 @@ for loop in 1 2 3; do
     echo "Flink start" >>$resultFile
     $startflink
     START=$(date +%s)
-    # MST 2000 (2042s), 1500 (1919s)
-    $flink run -c SWJCluster $jar --output $output_path --tput 1400 --w1size 20 --w1slide 10 --w2slide 10 --w2size 20 --run 25 --order ACB --freqA 30 --freqB 15 --para 16 --keys 16
+    # MST 1300
+    $flink run -c SWJCluster $jar --output $output_path --tput 1300 --w1size 20 --w1slide 10 --w2slide 10 --w2size 20 --run 25 --order ACB --freqA 30 --freqB 15 --para 16 --keys 16
     END=$(date +%s)
     DIFF=$((END - START))
-    echo "SWJ_ACB run w1(20,10) w2(20,10)"$loop " : "$DIFF"s" >>$resultFile
+    echo "SWJ_ACB_A1 run w1(20,10) w2(20,10)"$loop " : "$DIFF"s" >>$resultFile
     $stopflink
     echo "------------ Flink stopped ------------" >>$resultFile
     cp '/home/ziehn-ldap/flink-1.11.6_SWJ/log/''flink-ziehn-ldap -taskexecutor-1-sr630-wn-a-13.out' '/home/ziehn-ldap/BaselineExp/result_SWJ_A1_3/FOut_A1_s10_ACB_'$loop'.txt'
@@ -199,8 +199,8 @@ for loop in 1 2 3; do
     echo "Flink start" >>$resultFile
     $startflink
     START=$(date +%s)
-    # 1000 seems to but takes very very look 90 min, with 800 down to 6645 s reduce further
-    $flink run -c SWJCluster $jar --output $output_path --tput 600 --w1size 20 --w1slide 1 --w2slide 1 --w2size 10 --run 25 --order ACB --freqA 30 --freqB 15 --para 16 --keys 16
+    # 1000 seems to but takes very very look 90 min, with 800 down to 6645 s reduce further, 600 with 5000s
+    $flink run -c SWJCluster $jar --output $output_path --tput 200 --w1size 20 --w1slide 1 --w2slide 1 --w2size 10 --run 25 --order ACB --freqA 30 --freqB 15 --para 16 --keys 16
     END=$(date +%s)
     DIFF=$((END - START))
     echo "SWJ_ACB run w1(20,1) w2(10,1)"$loop " : "$DIFF"s" >>$resultFile
@@ -216,8 +216,8 @@ for loop in 1 2 3; do
     echo "Flink start" >>$resultFile
     $startflink
     START=$(date +%s)
-    # 2000 seems to but takes very very look, 1500 took 1829s
-    $flink run -c SWJCluster $jar --output $output_path --tput 1400 --w1size 20 --w1slide 10 --w2slide 10 --w2size 15 --run 25 --order ACB --freqA 30 --freqB 15 --para 16 --keys 16
+    # 1350 MST
+    $flink run -c SWJCluster $jar --output $output_path --tput 1350 --w1size 20 --w1slide 10 --w2slide 10 --w2size 15 --run 25 --order ACB --freqA 30 --freqB 15 --para 16 --keys 16
     END=$(date +%s)
     DIFF=$((END - START))
     echo "SWJ_ACB_A3 run w1(20,10) w2(15,10)"$loop " : "$DIFF"s" >>$resultFile
@@ -236,7 +236,7 @@ for loop in 1 2 3; do
     $startflink
     START=$(date +%s)
     # 500 too much
-    $flink run -c SWJCluster $jar --output $output_path --tput 250 --w1size 20 --w1slide 1 --w2slide 1 --w2size 20 --run 25 --order ABC --freqA 30 --freqB 15 --para 16 --keys 16
+    $flink run -c SWJCluster $jar --output $output_path --tput 50 --w1size 20 --w1slide 1 --w2slide 1 --w2size 20 --run 25 --order ABC --freqA 30 --freqB 15 --para 16 --keys 16
     END=$(date +%s)
     DIFF=$((END - START))
     echo "SWJ_ABC run w1(20,1) w2(20,1)"$loop " : "$DIFF"s" >>$resultFile
@@ -252,11 +252,11 @@ for loop in 1 2 3; do
     echo "Flink start" >>$resultFile
     $startflink
     START=$(date +%s)
-    # 2000 is too much, 1000 is okay, let us try 1500
-    $flink run -c SWJCluster $jar --output $output_path --tput 900 --w1size 20 --w1slide 10 --w2slide 10 --w2size 20 --run 25 --order ABC --freqA 30 --freqB 15 --para 16 --keys 16
+    # 2000 is too much, 1000 is okay, let us try 1500, 900 1749s, 800 2160s
+    $flink run -c SWJCluster $jar --output $output_path --tput 750 --w1size 20 --w1slide 10 --w2slide 10 --w2size 20 --run 25 --order ABC --freqA 30 --freqB 15 --para 16 --keys 16
     END=$(date +%s)
     DIFF=$((END - START))
-    echo "SWJ_ABC run w1(20,10) w2(20,10)"$loop " : "$DIFF"s" >>$resultFile
+    echo "SWJ_ABC_A1 run w1(20,10) w2(20,10)"$loop " : "$DIFF"s" >>$resultFile
     $stopflink
     echo "------------ Flink stopped ------------" >>$resultFile
     cp '/home/ziehn-ldap/flink-1.11.6_SWJ/log/''flink-ziehn-ldap -taskexecutor-1-sr630-wn-a-13.out' '/home/ziehn-ldap/BaselineExp/result_SWJ_A1_3/FOut_A1_s10_ABC_'$loop'.txt'
@@ -269,11 +269,11 @@ for loop in 1 2 3; do
     echo "Flink start" >>$resultFile
     $startflink
     START=$(date +%s)
-    # 1000 seems to but takes very very look 90 min
-    $flink run -c SWJCluster $jar --output $output_path --tput 250 --w1size 20 --w1slide 1 --w2slide 1 --w2size 10 --run 25 --order ABC --freqA 30 --freqB 15 --para 16 --keys 16
+    # MST 100
+    $flink run -c SWJCluster $jar --output $output_path --tput 100 --w1size 20 --w1slide 1 --w2slide 1 --w2size 10 --run 25 --order ABC --freqA 30 --freqB 15 --para 16 --keys 16
     END=$(date +%s)
     DIFF=$((END - START))
-    echo "SWJ_ABC run w1(20,1) w2(10,1)"$loop " : "$DIFF"s" >>$resultFile
+    echo "SWJ_ABC_A3 run w1(20,1) w2(10,1)"$loop " : "$DIFF"s" >>$resultFile
     $stopflink
     echo "------------ Flink stopped ------------" >>$resultFile
     cp '/home/ziehn-ldap/flink-1.11.6_SWJ/log/''flink-ziehn-ldap -taskexecutor-1-sr630-wn-a-13.out' '/home/ziehn-ldap/BaselineExp/result_SWJ_A1_3/FOut_A3_s1_ABC_'$loop'.txt'
@@ -286,8 +286,8 @@ for loop in 1 2 3; do
     echo "Flink start" >>$resultFile
     $startflink
     START=$(date +%s)
-    # 2000 fail
-    $flink run -c SWJCluster $jar --output $output_path --tput 1000 --w1size 20 --w1slide 10 --w2slide 10 --w2size 15 --run 25 --order ABC --freqA 30 --freqB 15 --para 16 --keys 16
+    # MST 950
+    $flink run -c SWJCluster $jar --output $output_path --tput 950 --w1size 20 --w1slide 10 --w2slide 10 --w2size 15 --run 25 --order ABC --freqA 30 --freqB 15 --para 16 --keys 16
     END=$(date +%s)
     DIFF=$((END - START))
     echo "SWJ_ABC_A3 run w1(20,10) w2(15,10)"$loop " : "$DIFF"s" >>$resultFile
