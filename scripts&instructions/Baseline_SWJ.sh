@@ -13,7 +13,7 @@ now=$(date +"%T")
 today=$(date +%d.%m.%y)
 echo "Current time : $today $now" >>$resultFile
 echo "----------$today $now------------" >>$resultFile
-for loop in 1 2; do
+for loop in 1 2 3 4; do
       # A4 - ABC
       now=$(date +"%T")
       today=$(date +%d.%m.%y)
@@ -40,8 +40,8 @@ for loop in 1 2; do
       echo "Flink start" >>$resultFile
       $startflink
       START=$(date +%s)
-      # 17500 fails
-      $flink run -c SWJCluster $jar --output $output_path --tput 15000 --w1size 30 --w1slide 45 --w2slide 45 --w2size 5 --run 25 --order ABC --freqA 30 --freqB 15 --para 16 --keys 16
+      # 15 is MST
+      $flink run -c SWJCluster $jar --output $output_path --tput 17500 --w1size 30 --w1slide 45 --w2slide 45 --w2size 5 --run 25 --order ABC --freqA 30 --freqB 15 --para 16 --keys 16
       END=$(date +%s)
       DIFF=$((END - START))
       # shellcheck disable=SC2027
@@ -59,8 +59,8 @@ for loop in 1 2; do
       echo "Flink start" >>$resultFile
       $startflink
       START=$(date +%s)
-      #25T is MST (30 is too much)
-      $flink run -c SWJCluster $jar --output $output_path --tput 25000 --w1size 30 --w1slide 30 --w2slide 30 --w2size 5 --run 25 --order ACB --freqA 30 --freqB 15 --para 16 --keys 16
+      #25T is MST but time is 2300s (30 is too much) try if better with 20
+      $flink run -c SWJCluster $jar --output $output_path --tput 18000 --w1size 30 --w1slide 30 --w2slide 30 --w2size 5 --run 25 --order ACB --freqA 30 --freqB 15 --para 16 --keys 16
       END=$(date +%s)
       DIFF=$((END - START))
       # shellcheck disable=SC2027
@@ -78,8 +78,8 @@ for loop in 1 2; do
       echo "Flink start" >>$resultFile
       $startflink
       START=$(date +%s)
-      # 30T also works with 1788s
-      $flink run -c SWJCluster $jar --output $output_path --tput 35000 --w1size 30 --w1slide 45 --w2slide 45 --w2size 5 --run 25 --order ACB --freqA 30 --freqB 15 --para 16 --keys 16
+      # 35T is MST
+      $flink run -c SWJCluster $jar --output $output_path --tput 37500 --w1size 30 --w1slide 45 --w2slide 45 --w2size 5 --run 25 --order ACB --freqA 30 --freqB 15 --para 16 --keys 16
       END=$(date +%s)
       DIFF=$((END - START))
       # shellcheck disable=SC2027
@@ -97,8 +97,8 @@ for loop in 1 2; do
       echo "Flink start" >>$resultFile
       $startflink
       START=$(date +%s)
-      # 12500 MST, 15T (2015s)
-      $flink run -c SWJCluster $jar --output $output_path --tput 12500 --w1size 30 --w1slide 30 --w2slide 30 --w2size 5 --run 25 --order BCA --freqA 30 --freqB 15 --para 16 --keys 16
+      # 12500 MST try like CBA
+      $flink run -c SWJCluster $jar --output $output_path --tput 16000 --w1size 30 --w1slide 30 --w2slide 30 --w2size 5 --run 25 --order BCA --freqA 30 --freqB 15 --para 16 --keys 16
       END=$(date +%s)
       DIFF=$((END - START))
       # shellcheck disable=SC2027
@@ -135,8 +135,8 @@ for loop in 1 2; do
       echo "Flink start" >>$resultFile
       $startflink
       START=$(date +%s)
-      #MST 25
-      $flink run -c SWJCluster $jar --output $output_path --tput 25000 --w1size 30 --w1slide 30 --w2slide 30 --w2size 5 --run 25 --order CAB --freqA 30 --freqB 15 --para 16 --keys 16
+      #MST 25 works but 2400s test with
+      $flink run -c SWJCluster $jar --output $output_path --tput 20000 --w1size 30 --w1slide 30 --w2slide 30 --w2size 5 --run 25 --order CAB --freqA 30 --freqB 15 --para 16 --keys 16
       END=$(date +%s)
       DIFF=$((END - START))
       # shellcheck disable=SC2027
@@ -153,8 +153,8 @@ for loop in 1 2; do
       echo "Flink start" >>$resultFile
       $startflink
       START=$(date +%s)
-      # 30T 1855s 20T 1794s
-      $flink run -c SWJCluster $jar --output $output_path --tput 30000 --w1size 30 --w1slide 45 --w2slide 45 --w2size 5 --run 25 --order CAB --freqA 30 --freqB 15 --para 16 --keys 16
+      # 30T 1855s 20T 1794s test with same as ACB (35T)
+      $flink run -c SWJCluster $jar --output $output_path --tput 35000 --w1size 30 --w1slide 45 --w2slide 45 --w2size 5 --run 25 --order CAB --freqA 30 --freqB 15 --para 16 --keys 16
       END=$(date +%s)
       DIFF=$((END - START))
       # shellcheck disable=SC2027
@@ -172,7 +172,7 @@ for loop in 1 2; do
       echo "Flink start" >>$resultFile
       $startflink
       START=$(date +%s)
-      #MST 9 1827s
+      #MST 8,5 is MST
       $flink run -c SWJCluster $jar --output $output_path --tput 8500 --w1size 30 --w1slide 30 --w2slide 30 --w2size 5 --run 25 --order BAC --freqA 30 --freqB 15 --para 16 --keys 16
       END=$(date +%s)
       DIFF=$((END - START))
@@ -190,8 +190,8 @@ for loop in 1 2; do
       echo "Flink start" >>$resultFile
       $startflink
       START=$(date +%s)
-      # 15T seems fine (1688s), try as ABC
-      $flink run -c SWJCluster $jar --output $output_path --tput 17500 --w1size 30 --w1slide 45 --w2slide 45 --w2size 5 --run 25 --order BAC --freqA 30 --freqB 15 --para 16 --keys 16
+      # 15T is MST, 17,5 fails
+      $flink run -c SWJCluster $jar --output $output_path --tput 15000 --w1size 30 --w1slide 45 --w2slide 45 --w2size 5 --run 25 --order BAC --freqA 30 --freqB 15 --para 16 --keys 16
       END=$(date +%s)
       DIFF=$((END - START))
       # shellcheck disable=SC2027
@@ -209,8 +209,8 @@ for loop in 1 2; do
       echo "Flink start" >>$resultFile
       $startflink
       START=$(date +%s)
-      #MST 9 1827s
-      $flink run -c SWJCluster $jar --output $output_path --tput 12500 --w1size 30 --w1slide 30 --w2slide 30 --w2size 5 --run 25 --order CBA --freqA 30 --freqB 15 --para 16 --keys 16
+      #MST 12,5 is MST lets try 16 is 50% more than ABC
+      $flink run -c SWJCluster $jar --output $output_path --tput 16000 --w1size 30 --w1slide 30 --w2slide 30 --w2size 5 --run 25 --order CBA --freqA 30 --freqB 15 --para 16 --keys 16
       END=$(date +%s)
       DIFF=$((END - START))
       # shellcheck disable=SC2027
@@ -227,8 +227,8 @@ for loop in 1 2; do
       echo "Flink start" >>$resultFile
       $startflink
       START=$(date +%s)
-      # 15T seems fine (1688s), try as ABC
-      $flink run -c SWJCluster $jar --output $output_path --tput 20000 --w1size 30 --w1slide 45 --w2slide 45 --w2size 5 --run 25 --order CBA --freqA 30 --freqB 15 --para 16 --keys 16
+      # 20T is MST, test 30T as BCA
+      $flink run -c SWJCluster $jar --output $output_path --tput 30000 --w1size 30 --w1slide 45 --w2slide 45 --w2size 5 --run 25 --order CBA --freqA 30 --freqB 15 --para 16 --keys 16
       END=$(date +%s)
       DIFF=$((END - START))
       # shellcheck disable=SC2027
@@ -247,8 +247,8 @@ for order in ABC BAC; do
       echo "Flink start" >>$resultFile
       $startflink
       START=$(date +%s)
-      # 35T no, 25T yes, 30T yes but 1788s
-      $flink run -c SWJCluster $jar --output $output_path --tput 27500 --w1size 5 --w1slide 30 --w2slide 30 --w2size 30 --run 25 --order $order --freqA 30 --freqB 15 --para 16 --keys 16
+      # 35T no, 30 test (27,5 is MST)
+      $flink run -c SWJCluster $jar --output $output_path --tput 35000 --w1size 5 --w1slide 30 --w2slide 30 --w2size 30 --run 25 --order $order --freqA 30 --freqB 15 --para 16 --keys 16
       END=$(date +%s)
       DIFF=$((END - START))
       # shellcheck disable=SC2027
@@ -266,7 +266,7 @@ for order in ABC BAC; do
       $startflink
       START=$(date +%s)
       # 35T yes timeing 1600s, 40 is 1665s -> 375 MTS
-      $flink run -c SWJCluster $jar --output $output_path --tput 37500 --w1size 5 --w1slide 45 --w2slide 45 --w2size 30 --run 25 --order $order --freqA 30 --freqB 15 --para 16 --keys 16
+      $flink run -c SWJCluster $jar --output $output_path --tput 60000 --w1size 5 --w1slide 45 --w2slide 45 --w2size 30 --run 25 --order $order --freqA 30 --freqB 15 --para 16 --keys 16
       END=$(date +%s)
       DIFF=$((END - START))
       # shellcheck disable=SC2027
@@ -286,8 +286,8 @@ for order in ABC BAC; do
       echo "Flink start" >>$resultFile
       $startflink
       START=$(date +%s)
-      # higher from 25T to 35T (15T all made) 35T is oksy but 1800s, 32500 still 1780s
-      $flink run -c SWJCluster $jar --output $output_path --tput 30000 --w1size 5 --w1slide 30 --w2slide 30 --w2size 30 --run 25 --order $order --freqA 30 --freqB 15 --para 16 --keys 16
+      # higher from 25T to 35T (15T all made) 35T is oksy but 1800s, 32500 still 1780s (30T is MST for all works)
+      $flink run -c SWJCluster $jar --output $output_path --tput 60000 --w1size 5 --w1slide 30 --w2slide 30 --w2size 30 --run 25 --order $order --freqA 30 --freqB 15 --para 16 --keys 16
       END=$(date +%s)
       DIFF=$((END - START))
       # shellcheck disable=SC2027
@@ -305,7 +305,7 @@ for order in ABC BAC; do
       $startflink
       START=$(date +%s)
       #  40T MST with 1660s
-      $flink run -c SWJCluster $jar --output $output_path --tput 50000 --w1size 5 --w1slide 45 --w2slide 45 --w2size 30 --run 25 --order $order --freqA 30 --freqB 15 --para 16 --keys 16
+      $flink run -c SWJCluster $jar --output $output_path --tput 80000 --w1size 5 --w1slide 45 --w2slide 45 --w2size 30 --run 25 --order $order --freqA 30 --freqB 15 --para 16 --keys 16
       END=$(date +%s)
       DIFF=$((END - START))
       # shellcheck disable=SC2027
