@@ -1,4 +1,5 @@
 import org.apache.flink.api.common.JobExecutionResult;
+import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.api.common.functions.FlatJoinFunction;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.api.java.tuple.Tuple6;
@@ -40,6 +41,7 @@ public class SWJCluster {
         int freqC = parameters.getInt("freqC", 1);
         int parallelism = parameters.getInt("para", 16);
         int runtime = parameters.getInt("run", 1);
+        boolean filter = parameters.getBoolean("filter", false);
         String joinOrder = parameters.get("order", "ABC");
         // 1 * 20 = 20 tuples per window per stream
         // 20*20 for window one * 20 for third window
@@ -74,6 +76,12 @@ public class SWJCluster {
         streamA.flatMap(new ThroughputLogger<Tuple3<Integer, Integer, Long>>(ArtificalSourceFunction.RECORD_SIZE_IN_BYTE, throughputA));
         streamB.flatMap(new ThroughputLogger<Tuple3<Integer, Integer, Long>>(ArtificalSourceFunction.RECORD_SIZE_IN_BYTE, throughputB));
         streamC.flatMap(new ThroughputLogger<Tuple3<Integer, Integer, Long>>(ArtificalSourceFunction.RECORD_SIZE_IN_BYTE, throughputC));
+
+        if (filter){
+            streamA = streamA.filter(new UDFs.filterPosInt());
+            streamB = streamB.filter(new UDFs.filterPosInt());
+            streamC = streamC.filter(new UDFs.filterPosInt());
+        }
 
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> resultStream;
 
