@@ -1,5 +1,6 @@
 package util;
 
+import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.api.java.tuple.*;
 import org.apache.flink.streaming.api.functions.AssignerWithPeriodicWatermarks;
@@ -72,6 +73,46 @@ public class UDFs {
             }else
             {
                 timestamp = element.f2; // automatically propagate 'A' if timestamp assignment is wrong
+            }
+            currentMaxTimestamp = Math.max(timestamp, currentMaxTimestamp);
+            return timestamp;
+        }
+    }
+
+    public static class ExtractTimestampABC implements AssignerWithPeriodicWatermarks<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> {
+        private static final long serialVersionUID = 1L;
+        private long maxOutOfOrderness;
+
+        private String timePropagation;
+
+        private long currentMaxTimestamp;
+
+        public ExtractTimestampABC() {
+            this.maxOutOfOrderness = 0;
+        }
+
+        public ExtractTimestampABC(long periodMs, String timePropagation) {
+
+            this.maxOutOfOrderness = (periodMs);
+            this.timePropagation = timePropagation;
+        }
+
+        @Nullable
+        @Override
+        public Watermark getCurrentWatermark() {
+            return new Watermark(currentMaxTimestamp - maxOutOfOrderness);
+        }
+
+        @Override
+        public long extractTimestamp(Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long> element, long l) {
+            long timestamp = 0L;
+            if (timePropagation.equals("A")){
+                timestamp = element.f2;
+            }else if(timePropagation.equals("B")){
+                timestamp = element.f5;
+            }
+            else{
+                timestamp = element.f8; // automatically propagate the last joined stream
             }
             currentMaxTimestamp = Math.max(timestamp, currentMaxTimestamp);
             return timestamp;
@@ -169,6 +210,20 @@ public class UDFs {
         @Override
         public Integer getKey(Tuple6<Integer, Integer, Long,Integer, Integer, Long> data) throws Exception {
             return data.f0;
+        }
+    }
+
+public static class getKeyT9 implements KeySelector<Tuple9<Integer, Integer, Long,Integer, Integer, Long,Integer, Integer, Long>, Integer> {
+    @Override
+    public Integer getKey(Tuple9<Integer, Integer, Long,Integer, Integer, Long,Integer, Integer, Long> data) throws Exception {
+        return data.f0;
+    }
+}
+
+public static class filterPosInt implements FilterFunction<Tuple3<Integer, Integer, Long>> {
+        @Override
+        public boolean filter(Tuple3<Integer, Integer, Long> tuple3) throws Exception {
+            return tuple3.f1 > 0;
         }
     }
 }

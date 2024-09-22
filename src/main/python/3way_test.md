@@ -1,22 +1,22 @@
 streams A, B, C, and D;
 windows: w_1, w_2, W_3, 
-timestamp: W_2 : A, W_3 : A  
+timestamp: W_2 : A, W_3 : B 
 
 window_assignment: 
 A:B : w_1
 A:C : w_2 
 B:C : w_1,W_2
-A:D : W_3
-B:D : W_1,W_2,W_3
+B:D : W_3
+A:D : W_1,W_2,W_3
 C:D:  W_1,W_2,W_3
 
 1. A → B → C → D (original q )
 
-(A, B) → W_1 -> a.ts -> (AB, C) → W_2 -> a.ts -> (ABC, D) → W_3 
+(A, B) → W_1 -> a.ts -> (AB, C) → W_2 -> b.ts -> (ABC, D) → W_3 
 
 2. A → B → D → C
 
-(A, B) → W_1 -> a.ts -> (AB, D) → W_3 -> a.ts -> (ABD, C) → W_2 
+(A, B) → W_1 -> b.ts -> (AB, D) → W_3 -> a.ts -> (ABD, C) → W_2 
 
 3. A → C → B → D
 

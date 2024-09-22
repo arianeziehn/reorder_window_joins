@@ -22,7 +22,7 @@ for loop in 1 2 3; do
     $startflink
     START=$(date +%s)
     # 10T works as MST for both 30 as MST but takes 3100s that is a bit much, see if time goes down with lower MST 9000 -> 3000s
-    $flink run -c SWJCluster $jar --output $output_path --tput 8000 --w1size 30 --w1slide 30 --w2slide 30 --w2size 30 --run 25 --order $order --freqA 30 --freqB 15 --para 16 --keys 16
+    $flink run -c SWJCluster $jar --output $output_path --tput 5000 --w1size 30 --w1slide 30 --w2slide 30 --w2size 30 --run 25 --order $order --freqA 30 --freqB 15 --para 16 --keys 16
     END=$(date +%s)
     DIFF=$((END - START))
     echo "SWJ_A2"$order" run w1(30,30) w2(30,30)"$loop " : "$DIFF"s" >>$resultFile
@@ -39,7 +39,7 @@ for loop in 1 2 3; do
     $startflink
     START=$(date +%s)
     # 10T works as MST for 2500s let us check lower
-    $flink run -c SWJCluster $jar --output $output_path --tput 8000 --w1size 30 --w1slide 45 --w2slide 45 --w2size 30 --run 25 --order $order --freqA 30 --freqB 15 --para 16 --keys 16
+    $flink run -c SWJCluster $jar --output $output_path --tput 6000 --w1size 30 --w1slide 45 --w2slide 45 --w2size 30 --run 25 --order $order --freqA 30 --freqB 15 --para 16 --keys 16
     END=$(date +%s)
     DIFF=$((END - START))
     echo "SWJ_A2"$order" run w1(30,45) w2(30,45)"$loop " : "$DIFF"s" >>$resultFile
@@ -57,8 +57,8 @@ for loop in 1 2 3; do
     echo "Flink start" >>$resultFile
     $startflink
     START=$(date +%s)
-    # 3,5T is MST
-    $flink run -c SWJCluster $jar --output $output_path --tput 3500 --w1size 30 --w1slide 30 --w2slide 30 --w2size 30 --run 25 --order $order --freqA 30 --freqB 15 --para 16 --keys 16
+    # 3,5T is MST but always over 2000s, we go 500 down
+    $flink run -c SWJCluster $jar --output $output_path --tput 3000 --w1size 30 --w1slide 30 --w2slide 30 --w2size 30 --run 25 --order $order --freqA 30 --freqB 15 --para 16 --keys 16
     END=$(date +%s)
     DIFF=$((END - START))
     echo "SWJ_A2"$order" run w1(30,30) w2(30,30)"$loop " : "$DIFF"s" >>$resultFile
@@ -74,7 +74,7 @@ for loop in 1 2 3; do
     echo "Flink start" >>$resultFile
     $startflink
     START=$(date +%s)
-    # 3,5T works but more is possible, 5T is too much
+    # 3,5T works but more is possible, 5T is too much, 4T it is MST
     $flink run -c SWJCluster $jar --output $output_path --tput 4000 --w1size 30 --w1slide 45 --w2slide 45 --w2size 30 --run 25 --order $order --freqA 30 --freqB 15 --para 16 --keys 16
     END=$(date +%s)
     DIFF=$((END - START))

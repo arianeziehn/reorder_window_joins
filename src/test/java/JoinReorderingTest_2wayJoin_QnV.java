@@ -56,7 +56,7 @@ public class JoinReorderingTest_2wayJoin_QnV {
                 .filter(t -> t.f1 > quaFilter)
                 .assignTimestampsAndWatermarks(new UDFs.ExtractTimestamp(60000));
 
-        streamC = env.addSource(new Tuple3ParallelSourceFunction(filePM, numberOfKeys, ";", throughput))
+        streamC = env.addSource(new Tuple3ParallelSourceFunction(filePM, numberOfKeys, ";", throughput, "PM10"))
                 .setParallelism(para)
                 .filter(t -> t.f1 > pm10Filter)
                 .assignTimestampsAndWatermarks(new UDFs.ExtractTimestamp(180000));

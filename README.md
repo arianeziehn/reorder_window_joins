@@ -2,13 +2,9 @@
 
 ## TODOs 
 
-### Jan
-1. revisit thesis, can we use sth? Background, Related Work, References? -> Please add to paper
-
 ### someone
 1. write PT query (not in Correctness, cannot do much there, only for performance evaluation)
 3. think about a PT solution, maybe in seconds and always start at a minute? 
-2. [started, see test java] make CorrectnessCheck automatic, i.e., run all solution (perfectly Case base (C and A Cases)) and check if they are equivalent after removing all duplicates that is no performance evaluation so it can be heavy and only tested local 
 2. Investigate algorithms approach in python folder and implement it. Test for longer queries (Start 4-way Join would be fine I guess) and add to Correctness Test
 2. check queries in python/3way_test and implement a set of them, add them to the test cases 
 ## Repository Structure 

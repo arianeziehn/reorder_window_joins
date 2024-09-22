@@ -175,16 +175,25 @@ public class Tuple3ParallelSourceFunction extends RichParallelSourceFunction<Tup
                         millisSinceEpoch = this.currentTime;
                     }
 
-                    int p10 = (int) Double.parseDouble(data[6].trim());
-
                     int maxPara = this.getRuntimeContext().getNumberOfParallelSubtasks();
                     if (this.sensors >= maxPara) {
                         for (int i = 0; i < (this.sensors / maxPara); i++) {
 
-                            Tuple3<Integer, Integer, Long> event = new Tuple3<>((this.getRuntimeContext().getIndexOfThisSubtask() + (maxPara * i)), p10,
-                                    millisSinceEpoch);
-                            sourceContext.collect(event);
-                            tupleCounter++;
+                            if (this.streamIdentifier == "PM10") {
+                                int p10 = (int) Double.parseDouble(data[6].trim());
+                                Tuple3<Integer, Integer, Long> event = new Tuple3<>((this.getRuntimeContext().getIndexOfThisSubtask() + (maxPara * i)), p10,
+                                        millisSinceEpoch);
+
+                                sourceContext.collect(event);
+                                tupleCounter++;
+                            }else {
+                                int p2 = (int) Double.parseDouble(data[9].trim());
+                                Tuple3<Integer, Integer, Long> quaEvent = new Tuple3<>((this.getRuntimeContext().getIndexOfThisSubtask() + (maxPara * i)), p2,
+                                        millisSinceEpoch);
+
+                                sourceContext.collect(quaEvent);
+                                tupleCounter++;
+                            }
 
                         }
                     } else {
