@@ -11,11 +11,11 @@ import javax.annotation.Nullable;
 public class UDFs {
     /**
      * TimeStampAssigners
-      */
+     */
 
-    public static class ExtractTimestamp implements AssignerWithPeriodicWatermarks<Tuple3<Integer,Integer,Long>> {
+    public static class ExtractTimestamp implements AssignerWithPeriodicWatermarks<Tuple3<Integer, Integer, Long>> {
         private static final long serialVersionUID = 1L;
-        private long maxOutOfOrderness;
+        private final long maxOutOfOrderness;
 
         private long currentMaxTimestamp;
 
@@ -34,7 +34,35 @@ public class UDFs {
         }
 
         @Override
-        public long extractTimestamp(Tuple3<Integer,Integer,Long> element, long l) {
+        public long extractTimestamp(Tuple3<Integer, Integer, Long> element, long l) {
+            long timestamp = element.f2;
+            currentMaxTimestamp = Math.max(timestamp, currentMaxTimestamp);
+            return timestamp;
+        }
+    }
+
+    public static class ExtractTimestamp_T4 implements AssignerWithPeriodicWatermarks<Tuple4<Integer, Integer, Long, Long>> {
+        private static final long serialVersionUID = 1L;
+        private final long maxOutOfOrderness;
+
+        private long currentMaxTimestamp;
+
+        public ExtractTimestamp_T4() {
+            this.maxOutOfOrderness = 0;
+        }
+
+        public ExtractTimestamp_T4(long periodMs) {
+            this.maxOutOfOrderness = (periodMs);
+        }
+
+        @Nullable
+        @Override
+        public Watermark getCurrentWatermark() {
+            return new Watermark(currentMaxTimestamp - maxOutOfOrderness);
+        }
+
+        @Override
+        public long extractTimestamp(Tuple4<Integer, Integer, Long, Long> element, long l) {
             long timestamp = element.f2;
             currentMaxTimestamp = Math.max(timestamp, currentMaxTimestamp);
             return timestamp;
@@ -43,7 +71,7 @@ public class UDFs {
 
     public static class ExtractTimestampAB implements AssignerWithPeriodicWatermarks<Tuple6<Integer, Integer, Long, Integer, Integer, Long>> {
         private static final long serialVersionUID = 1L;
-        private long maxOutOfOrderness;
+        private final long maxOutOfOrderness;
 
         private String timePropagation;
 
@@ -68,10 +96,46 @@ public class UDFs {
         @Override
         public long extractTimestamp(Tuple6<Integer, Integer, Long, Integer, Integer, Long> element, long l) {
             long timestamp = 0L;
-            if (timePropagation.equals("B")){
+            if (timePropagation.equals("B")) {
                 timestamp = element.f5;
-            }else
-            {
+            } else {
+                timestamp = element.f2; // automatically propagate 'A' if timestamp assignment is wrong
+            }
+            currentMaxTimestamp = Math.max(timestamp, currentMaxTimestamp);
+            return timestamp;
+        }
+    }
+
+    public static class ExtractTimestampAB_T7 implements AssignerWithPeriodicWatermarks<Tuple7<Integer, Integer, Long, Integer, Integer, Long, Long>> {
+        private static final long serialVersionUID = 1L;
+        private final long maxOutOfOrderness;
+
+        private String timePropagation;
+
+        private long currentMaxTimestamp;
+
+        public ExtractTimestampAB_T7() {
+            this.maxOutOfOrderness = 0;
+        }
+
+        public ExtractTimestampAB_T7(long periodMs, String timePropagation) {
+
+            this.maxOutOfOrderness = (periodMs);
+            this.timePropagation = timePropagation;
+        }
+
+        @Nullable
+        @Override
+        public Watermark getCurrentWatermark() {
+            return new Watermark(currentMaxTimestamp - maxOutOfOrderness);
+        }
+
+        @Override
+        public long extractTimestamp(Tuple7<Integer, Integer, Long, Integer, Integer, Long, Long> element, long l) {
+            long timestamp = 0L;
+            if (timePropagation.equals("B")) {
+                timestamp = element.f5;
+            } else {
                 timestamp = element.f2; // automatically propagate 'A' if timestamp assignment is wrong
             }
             currentMaxTimestamp = Math.max(timestamp, currentMaxTimestamp);
@@ -81,7 +145,7 @@ public class UDFs {
 
     public static class ExtractTimestampABC implements AssignerWithPeriodicWatermarks<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> {
         private static final long serialVersionUID = 1L;
-        private long maxOutOfOrderness;
+        private final long maxOutOfOrderness;
 
         private String timePropagation;
 
@@ -106,12 +170,11 @@ public class UDFs {
         @Override
         public long extractTimestamp(Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long> element, long l) {
             long timestamp = 0L;
-            if (timePropagation.equals("A")){
+            if (timePropagation.equals("A")) {
                 timestamp = element.f2;
-            }else if(timePropagation.equals("B")){
+            } else if (timePropagation.equals("B")) {
                 timestamp = element.f5;
-            }
-            else{
+            } else {
                 timestamp = element.f8; // automatically propagate the last joined stream
             }
             currentMaxTimestamp = Math.max(timestamp, currentMaxTimestamp);
@@ -121,7 +184,7 @@ public class UDFs {
 
     public static class ExtractTimestampAC implements AssignerWithPeriodicWatermarks<Tuple6<Integer, Integer, Long, Integer, Integer, Long>> {
         private static final long serialVersionUID = 1L;
-        private long maxOutOfOrderness;
+        private final long maxOutOfOrderness;
 
         private String timePropagation;
 
@@ -146,10 +209,46 @@ public class UDFs {
         @Override
         public long extractTimestamp(Tuple6<Integer, Integer, Long, Integer, Integer, Long> element, long l) {
             long timestamp = 0L;
-            if (timePropagation.equals("C")){
+            if (timePropagation.equals("C")) {
                 timestamp = element.f5;
-            }else
-            {
+            } else {
+                timestamp = element.f2; // automatically propagate 'A' if timestamp assignment is wrong
+            }
+            currentMaxTimestamp = Math.max(timestamp, currentMaxTimestamp);
+            return timestamp;
+        }
+    }
+
+    public static class ExtractTimestampAC_T7 implements AssignerWithPeriodicWatermarks<Tuple7<Integer, Integer, Long, Integer, Integer, Long, Long>> {
+        private static final long serialVersionUID = 1L;
+        private final long maxOutOfOrderness;
+
+        private String timePropagation;
+
+        private long currentMaxTimestamp;
+
+        public ExtractTimestampAC_T7() {
+            this.maxOutOfOrderness = 0;
+        }
+
+        public ExtractTimestampAC_T7(long periodMs, String timePropagation) {
+
+            this.maxOutOfOrderness = (periodMs);
+            this.timePropagation = timePropagation;
+        }
+
+        @Nullable
+        @Override
+        public Watermark getCurrentWatermark() {
+            return new Watermark(currentMaxTimestamp - maxOutOfOrderness);
+        }
+
+        @Override
+        public long extractTimestamp(Tuple7<Integer, Integer, Long, Integer, Integer, Long, Long> element, long l) {
+            long timestamp = 0L;
+            if (timePropagation.equals("C")) {
+                timestamp = element.f5;
+            } else {
                 timestamp = element.f2; // automatically propagate 'A' if timestamp assignment is wrong
             }
             currentMaxTimestamp = Math.max(timestamp, currentMaxTimestamp);
@@ -159,7 +258,7 @@ public class UDFs {
 
     public static class ExtractTimestampBC implements AssignerWithPeriodicWatermarks<Tuple6<Integer, Integer, Long, Integer, Integer, Long>> {
         private static final long serialVersionUID = 1L;
-        private long maxOutOfOrderness;
+        private final long maxOutOfOrderness;
 
         private String timePropagation;
 
@@ -184,10 +283,9 @@ public class UDFs {
         @Override
         public long extractTimestamp(Tuple6<Integer, Integer, Long, Integer, Integer, Long> element, long l) {
             long timestamp = 0L;
-            if (timePropagation.equals("C")){
+            if (timePropagation.equals("C")) {
                 timestamp = element.f5;
-            }else
-            {
+            } else {
                 timestamp = element.f2; // automatically propagate B if not declared otherwise
             }
             currentMaxTimestamp = Math.max(timestamp, currentMaxTimestamp);
@@ -197,7 +295,7 @@ public class UDFs {
 
     /**
      * KeySelectors
-      */
+     */
 
     public static class getKeyT3 implements KeySelector<Tuple3<Integer, Integer, Long>, Integer> {
         @Override
@@ -206,23 +304,44 @@ public class UDFs {
         }
     }
 
-    public static class getKeyT6 implements KeySelector<Tuple6<Integer, Integer, Long,Integer, Integer, Long>, Integer> {
+    public static class getKeyT4 implements KeySelector<Tuple4<Integer, Integer, Long, Long>, Integer> {
         @Override
-        public Integer getKey(Tuple6<Integer, Integer, Long,Integer, Integer, Long> data) throws Exception {
+        public Integer getKey(Tuple4<Integer, Integer, Long, Long> data) throws Exception {
             return data.f0;
         }
     }
 
-public static class getKeyT9 implements KeySelector<Tuple9<Integer, Integer, Long,Integer, Integer, Long,Integer, Integer, Long>, Integer> {
-    @Override
-    public Integer getKey(Tuple9<Integer, Integer, Long,Integer, Integer, Long,Integer, Integer, Long> data) throws Exception {
-        return data.f0;
+    public static class getKeyT6 implements KeySelector<Tuple6<Integer, Integer, Long, Integer, Integer, Long>, Integer> {
+        @Override
+        public Integer getKey(Tuple6<Integer, Integer, Long, Integer, Integer, Long> data) throws Exception {
+            return data.f0;
+        }
     }
-}
 
-public static class filterPosInt implements FilterFunction<Tuple3<Integer, Integer, Long>> {
+    public static class getKeyT7 implements KeySelector<Tuple7<Integer, Integer, Long, Integer, Integer, Long, Long>, Integer> {
+        @Override
+        public Integer getKey(Tuple7<Integer, Integer, Long, Integer, Integer, Long, Long> data) throws Exception {
+            return data.f0;
+        }
+    }
+
+    public static class getKeyT9 implements KeySelector<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>, Integer> {
+        @Override
+        public Integer getKey(Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long> data) throws Exception {
+            return data.f0;
+        }
+    }
+
+    public static class filterPosInt implements FilterFunction<Tuple3<Integer, Integer, Long>> {
         @Override
         public boolean filter(Tuple3<Integer, Integer, Long> tuple3) throws Exception {
+            return tuple3.f1 > 0;
+        }
+    }
+
+    public static class filterPosIntT4 implements FilterFunction<Tuple4<Integer, Integer, Long, Long>> {
+        @Override
+        public boolean filter(Tuple4<Integer, Integer, Long, Long> tuple3) throws Exception {
             return tuple3.f1 > 0;
         }
     }

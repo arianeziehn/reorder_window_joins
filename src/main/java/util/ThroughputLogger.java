@@ -13,8 +13,8 @@ public class ThroughputLogger<T> extends RichFlatMapFunction<T, Integer> {
     private long totalReceived = 0;
     private long lastTotalReceived = 0;
     private long lastLogTimeMs = -1;
-    private int elementSize;
-    private long logfreq;
+    private final int elementSize;
+    private final long logfreq;
     private long query = 0;
 
     public ThroughputLogger(int elementSize, long logfreq) {
