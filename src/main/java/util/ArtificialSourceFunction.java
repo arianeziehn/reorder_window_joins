@@ -6,18 +6,18 @@ import org.apache.flink.streaming.api.functions.source.RichParallelSourceFunctio
 import java.util.Random;
 
 
-public class ArtificalSourceFunction extends RichParallelSourceFunction<Tuple3<Integer, Integer, Long>> {
+public class ArtificialSourceFunction extends RichParallelSourceFunction<Tuple3<Integer, Integer, Long>> {
     private volatile boolean isRunning = true;
     public static final int RECORD_SIZE_IN_BYTE = 16;
     private final long throughput;
     boolean manipulateIngestionRate;
     private int numberOfKeys;
     private long startTime;
-    private int runtime;
+    private final int runtime;
     double freq; // tuples per minute
 
 
-    public ArtificalSourceFunction(long throughput, int runtime, double freq, int numberOfKeys) {
+    public ArtificialSourceFunction(long throughput, int runtime, double freq, int numberOfKeys) {
         this.numberOfKeys = numberOfKeys;
         this.runtime = runtime;
         this.throughput = throughput;
@@ -28,6 +28,7 @@ public class ArtificalSourceFunction extends RichParallelSourceFunction<Tuple3<I
     /***
      * Run method of the source, creates a stream of Tuple3()
      * runs for the period of runtime, e.g., 20 Minutes
+     * assign uniform distributed event time stamps
      * @param sourceContext
      * @throws Exception
      */
@@ -44,7 +45,7 @@ public class ArtificalSourceFunction extends RichParallelSourceFunction<Tuple3<I
             long now = System.currentTimeMillis();
             Integer value = r.nextInt();
             long eventTime = millisSinceEpoch;
-            Integer key = 0;
+            int key = 0;
 
             int maxPara = this.getRuntimeContext().getNumberOfParallelSubtasks();
             if (this.numberOfKeys == 0) {
@@ -59,10 +60,10 @@ public class ArtificalSourceFunction extends RichParallelSourceFunction<Tuple3<I
                 }
             } else {
                 run = false;
-                //TODO that code produces duplicates
+                //TODO
             }
 
-            millisSinceEpoch += ((60000L*60) / freq); //increase event time by 1 minute/ freq
+            millisSinceEpoch += ((60000L * 60) / freq); //increase event time by 1 minute/ freq
 
             // check if the tuple counts equals the defined throughput (per second)
             if (tupleCounter >= throughput && manipulateIngestionRate) {
@@ -76,7 +77,6 @@ public class ArtificalSourceFunction extends RichParallelSourceFunction<Tuple3<I
                 start = System.currentTimeMillis();
             }
             if ((now - this.startTime) >= this.runtime * 60000L) {
-                System.out.println("stop");
                 cancel();
                 run = false;
                 break;
