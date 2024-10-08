@@ -13,43 +13,79 @@ now=$(date +"%T")
 today=$(date +%d.%m.%y)
 echo "Current time : $today $now" >>$resultFile
 echo "----------$today $now------------" >>$resultFile
-for loop in 1 2 3; do
-  for order in ACB CAB; do
+for loop in 1 2 3 4 5; do
+# same rates
+  for order in ACB; do
     now=$(date +"%T")
     today=$(date +%d.%m.%y)
     echo "Current time : $today $now" >>$resultFile
     echo "Flink start" >>$resultFile
     $startflink
     START=$(date +%s)
-    # 10T works as MST for both 30 as MST but takes 3100s that is a bit much, see if time goes down with lower MST 9000 -> 3000s
-    $flink run -c SWJCluster $jar --output $output_path --tput 5000 --w1size 30 --w1slide 30 --w2slide 30 --w2size 30 --run 25 --order $order --freqA 30 --freqB 15 --para 16 --keys 16
+    $flink run -c SWJClusterT4_2 $jar --output $output_path --tput 50500 --w1size 30 --w1slide 30 --w2slide 30 --w2size 30 --run 25 --order $order --freqA 15 --freqB 15 --freqC 15 --para 16 --keys 16 --filter true
     END=$(date +%s)
     DIFF=$((END - START))
     echo "SWJ_A2"$order" run w1(30,30) w2(30,30)"$loop " : "$DIFF"s" >>$resultFile
     $stopflink
     echo "------------ Flink stopped ------------" >>$resultFile
-    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-1-sr630-wn-a-25.out' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2/FOut_A2_30_'$order'_'$loop'.txt'
-    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-0-sr630-wn-a-25.out' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2/FOut_A2_30_'$order'_'$loop'.txt'
-    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-1-sr630-wn-a-25.log' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2/FLog_A2_30_'$order'_'$loop'.txt'
-    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-0-sr630-wn-a-25.log' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2/FLog_A2_30_'$order'_'$loop'.txt'
+    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-1-sr630-wn-a-25.out' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2_S2/FOut_A2S2_30_'$order'_'$loop'.txt'
+    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-0-sr630-wn-a-25.out' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2_S2/FOut_A2S2_30_'$order'_'$loop'.txt'
+    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-1-sr630-wn-a-25.log' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2_S2/FLog_A2S2_30_'$order'_'$loop'.txt'
+    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-0-sr630-wn-a-25.log' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2_S2/FLog_A2S2_30_'$order'_'$loop'.txt'
     now=$(date +"%T")
     today=$(date +%d.%m.%y)
     echo "Current time : $today $now" >>$resultFile
     echo "Flink start" >>$resultFile
     $startflink
     START=$(date +%s)
-    # 10T works as MST for 2500s let us check lower
-    $flink run -c SWJCluster $jar --output $output_path --tput 6000 --w1size 30 --w1slide 45 --w2slide 45 --w2size 30 --run 25 --order $order --freqA 30 --freqB 15 --para 16 --keys 16
+    #23 works 1148385.2 15548.72053  71963.53
+    $flink run -c SWJClusterT4_2 $jar --output $output_path --tput 75000 --w1size 30 --w1slide 45 --w2slide 45 --w2size 30 --run 25 --order $order --freqA 15 --freqB 15 --freqC 15 --para 16 --keys 16 --filter true
     END=$(date +%s)
     DIFF=$((END - START))
     echo "SWJ_A2"$order" run w1(30,45) w2(30,45)"$loop " : "$DIFF"s" >>$resultFile
     $stopflink
     echo "------------ Flink stopped ------------" >>$resultFile
-    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-1-sr630-wn-a-25.out' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2/FOut_A2_45_'$order'_'$loop'.txt'
-    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-0-sr630-wn-a-25.out' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2/FOut_A2_45_'$order'_'$loop'.txt'
-    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-1-sr630-wn-a-25.log' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2/FLog_A2_45_'$order'_'$loop'.txt'
-    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-0-sr630-wn-a-25.log' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2/FLog_A2_45_'$order'_'$loop'.txt'
+    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-1-sr630-wn-a-25.out' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2_S2/FOut_A2S2_45_'$order'_'$loop'.txt'
+    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-0-sr630-wn-a-25.out' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2_S2/FOut_A2S2_45_'$order'_'$loop'.txt'
+    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-1-sr630-wn-a-25.log' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2_S2/FLog_A2S2_45_'$order'_'$loop'.txt'
+    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-0-sr630-wn-a-25.log' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2_S2/FLog_A2S2_45_'$order'_'$loop'.txt'
   done
+    for order in CAB; do
+      now=$(date +"%T")
+      today=$(date +%d.%m.%y)
+      echo "Current time : $today $now" >>$resultFile
+      echo "Flink start" >>$resultFile
+      $startflink
+      START=$(date +%s)
+      # 75 fails
+      $flink run -c SWJClusterT4_2 $jar --output $output_path --tput 60000 --w1size 30 --w1slide 30 --w2slide 30 --w2size 30 --run 25 --order $order --freqA 15 --freqB 15 --freqC 15 --para 16 --keys 16 --filter true
+      END=$(date +%s)
+      DIFF=$((END - START))
+      echo "SWJ_A2"$order" run w1(30,30) w2(30,30)"$loop " : "$DIFF"s" >>$resultFile
+      $stopflink
+      echo "------------ Flink stopped ------------" >>$resultFile
+      cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-1-sr630-wn-a-25.out' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2_S2/FOut_A2S2_30_'$order'_'$loop'.txt'
+      cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-0-sr630-wn-a-25.out' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2_S2/FOut_A2S2_30_'$order'_'$loop'.txt'
+      cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-1-sr630-wn-a-25.log' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2_S2/FLog_A2S2_30_'$order'_'$loop'.txt'
+      cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-0-sr630-wn-a-25.log' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2_S2/FLog_A2S2_30_'$order'_'$loop'.txt'
+      now=$(date +"%T")
+      today=$(date +%d.%m.%y)
+      echo "Current time : $today $now" >>$resultFile
+      echo "Flink start" >>$resultFile
+      $startflink
+      START=$(date +%s)
+      # 75 runs
+      $flink run -c SWJClusterT4_2 $jar --output $output_path --tput 100000 --w1size 30 --w1slide 45 --w2slide 45 --w2size 30 --run 25 --order $order --freqA 15 --freqB 15 --freqC 15 --para 16 --keys 16 --filter true
+      END=$(date +%s)
+      DIFF=$((END - START))
+      echo "SWJ_A2"$order" run w1(30,45) w2(30,45)"$loop " : "$DIFF"s" >>$resultFile
+      $stopflink
+      echo "------------ Flink stopped ------------" >>$resultFile
+      cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-1-sr630-wn-a-25.out' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2_S2/FOut_A2S2_45_'$order'_'$loop'.txt'
+      cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-0-sr630-wn-a-25.out' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2_S2/FOut_A2S2_45_'$order'_'$loop'.txt'
+      cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-1-sr630-wn-a-25.log' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2_S2/FLog_A2S2_45_'$order'_'$loop'.txt'
+      cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-0-sr630-wn-a-25.log' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2_S2/FLog_A2S2_45_'$order'_'$loop'.txt'
+    done
   for order in BCA CBA; do
     now=$(date +"%T")
     today=$(date +%d.%m.%y)
@@ -57,34 +93,34 @@ for loop in 1 2 3; do
     echo "Flink start" >>$resultFile
     $startflink
     START=$(date +%s)
-    # 3,5T is MST but always over 2000s, we go 500 down
-    $flink run -c SWJCluster $jar --output $output_path --tput 3000 --w1size 30 --w1slide 30 --w2slide 30 --w2size 30 --run 25 --order $order --freqA 30 --freqB 15 --para 16 --keys 16
+    #75 fails
+    $flink run -c SWJClusterT4_2 $jar --output $output_path --tput 55000 --w1size 30 --w1slide 30 --w2slide 30 --w2size 30 --run 25 --order $order --freqA 15 --freqB 15 --freqC 15 --para 16 --keys 16 --filter true
     END=$(date +%s)
     DIFF=$((END - START))
     echo "SWJ_A2"$order" run w1(30,30) w2(30,30)"$loop " : "$DIFF"s" >>$resultFile
     $stopflink
     echo "------------ Flink stopped ------------" >>$resultFile
-    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-1-sr630-wn-a-25.out' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2/FOut_A2_30_'$order'_'$loop'.txt'
-    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-0-sr630-wn-a-25.out' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2/FOut_A2_30_'$order'_'$loop'.txt'
-    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-1-sr630-wn-a-25.log' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2/FLog_A2_30_'$order'_'$loop'.txt'
-    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-0-sr630-wn-a-25.log' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2/FLog_A2_30_'$order'_'$loop'.txt'
+    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-1-sr630-wn-a-25.out' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2_S2/FOut_A2S2_30_'$order'_'$loop'.txt'
+    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-0-sr630-wn-a-25.out' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2_S2/FOut_A2S2_30_'$order'_'$loop'.txt'
+    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-1-sr630-wn-a-25.log' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2_S2/FLog_A2S2_30_'$order'_'$loop'.txt'
+    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-0-sr630-wn-a-25.log' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2_S2/FLog_A2S2_30_'$order'_'$loop'.txt'
     now=$(date +"%T")
     today=$(date +%d.%m.%y)
     echo "Current time : $today $now" >>$resultFile
     echo "Flink start" >>$resultFile
     $startflink
     START=$(date +%s)
-    # 3,5T works but more is possible, 5T is too much, 4T it is MST
-    $flink run -c SWJCluster $jar --output $output_path --tput 4000 --w1size 30 --w1slide 45 --w2slide 45 --w2size 30 --run 25 --order $order --freqA 30 --freqB 15 --para 16 --keys 16
+    #75 works
+    $flink run -c SWJClusterT4_2 $jar --output $output_path --tput 90000 --w1size 30 --w1slide 45 --w2slide 45 --w2size 30 --run 25 --order $order --freqA 15 --freqB 15 --freqC 15 --para 16 --keys 16 --filter true
     END=$(date +%s)
     DIFF=$((END - START))
     echo "SWJ_A2"$order" run w1(30,45) w2(30,45)"$loop " : "$DIFF"s" >>$resultFile
     $stopflink
     echo "------------ Flink stopped ------------" >>$resultFile
-    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-1-sr630-wn-a-25.out' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2/FOut_A2_45_'$order'_'$loop'.txt'
-    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-0-sr630-wn-a-25.out' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2/FOut_A2_45_'$order'_'$loop'.txt'
-    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-1-sr630-wn-a-25.log' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2/FLog_A2_45_'$order'_'$loop'.txt'
-    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-0-sr630-wn-a-25.log' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2/FLog_A2_45_'$order'_'$loop'.txt'
+    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-1-sr630-wn-a-25.out' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2_S2/FOut_A2S2_45_'$order'_'$loop'.txt'
+    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-0-sr630-wn-a-25.out' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2_S2/FOut_A2S2_45_'$order'_'$loop'.txt'
+    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-1-sr630-wn-a-25.log' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2_S2/FLog_A2S2_45_'$order'_'$loop'.txt'
+    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-0-sr630-wn-a-25.log' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2_S2/FLog_A2S2_45_'$order'_'$loop'.txt'
   done
     now=$(date +"%T")
     today=$(date +%d.%m.%y)
@@ -92,17 +128,17 @@ for loop in 1 2 3; do
     echo "Flink start" >>$resultFile
     $startflink
     START=$(date +%s)
-    # 2T MST
-    $flink run -c SWJCluster $jar --output $output_path --tput 2000 --w1size 30 --w1slide 30 --w2slide 30 --w2size 30 --run 25 --order ABC --freqA 30 --freqB 15 --para 16 --keys 16
+    #75 fails
+    $flink run -c SWJClusterT4_2 $jar --output $output_path --tput 65000 --w1size 30 --w1slide 30 --w2slide 30 --w2size 30 --run 25 --order ABC --freqA 15 --freqB 15 --freqC 15 --para 16 --keys 16 --filter true
     END=$(date +%s)
     DIFF=$((END - START))
     echo "SWJ_A2 ABC run w1(30,30) w2(30,30)"$loop " : "$DIFF"s" >>$resultFile
     $stopflink
     echo "------------ Flink stopped ------------" >>$resultFile
-    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-1-sr630-wn-a-25.out' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2/FOut_A2_30_ABC_'$loop'.txt'
-    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-0-sr630-wn-a-25.out' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2/FOut_A2_30_ABC_'$loop'.txt'
-    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-1-sr630-wn-a-25.log' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2/FLog_A2_30_ABC_'$loop'.txt'
-    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-0-sr630-wn-a-25.log' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2/FLog_A2_30_ABC_'$loop'.txt'
+    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-1-sr630-wn-a-25.out' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2_S2/FOut_A2S2_30_ABC_'$loop'.txt'
+    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-0-sr630-wn-a-25.out' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2_S2/FOut_A2S2_30_ABC_'$loop'.txt'
+    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-1-sr630-wn-a-25.log' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2_S2/FLog_A2S2_30_ABC_'$loop'.txt'
+    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-0-sr630-wn-a-25.log' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2_S2/FLog_A2S2_30_ABC_'$loop'.txt'
    #A2
     now=$(date +"%T")
     today=$(date +%d.%m.%y)
@@ -110,17 +146,17 @@ for loop in 1 2 3; do
     echo "Flink start" >>$resultFile
     $startflink
     START=$(date +%s)
-    # 2T MST
-    $flink run -c SWJCluster $jar --output $output_path --tput 2000 --w1size 30 --w1slide 30 --w2slide 30 --w2size 30 --run 25 --order BAC --freqA 30 --freqB 15 --para 16 --keys 16
+    #6T works 288085.2     76.61241 18000.00
+    $flink run -c SWJClusterT4_2 $jar --output $output_path --tput 65000 --w1size 30 --w1slide 30 --w2slide 30 --w2size 30 --run 25 --order BAC --freqA 15 --freqB 15 --freqC 15 --para 16 --keys 16 --filter true
     END=$(date +%s)
     DIFF=$((END - START))
     echo "SWJ_A2 BAC run w1(30,30) w2(30,30)"$loop " : "$DIFF"s" >>$resultFile
     $stopflink
     echo "------------ Flink stopped ------------" >>$resultFile
-    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-1-sr630-wn-a-25.out' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2/FOut_A2_30_BAC_'$loop'.txt'
-    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-0-sr630-wn-a-25.out' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2/FOut_A2_30_BAC_'$loop'.txt'
-    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-1-sr630-wn-a-25.log' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2/FLog_A2_30_BAC_'$loop'.txt'
-    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-0-sr630-wn-a-25.log' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2/FLog_A2_30_BAC_'$loop'.txt'
+    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-1-sr630-wn-a-25.out' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2_S2/FOut_A2S2_30_BAC_'$loop'.txt'
+    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-0-sr630-wn-a-25.out' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2_S2/FOut_A2S2_30_BAC_'$loop'.txt'
+    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-1-sr630-wn-a-25.log' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2_S2/FLog_A2S2_30_BAC_'$loop'.txt'
+    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-0-sr630-wn-a-25.log' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2_S2/FLog_A2S2_30_BAC_'$loop'.txt'
     #A2
     now=$(date +"%T")
     today=$(date +%d.%m.%y)
@@ -128,17 +164,17 @@ for loop in 1 2 3; do
     echo "Flink start" >>$resultFile
     $startflink
     START=$(date +%s)
-    # 3 MST
-    $flink run -c SWJCluster $jar --output $output_path --tput 3000 --w1size 30 --w1slide 45 --w2slide 45 --w2size 30 --run 25 --order ABC --freqA 30 --freqB 15 --para 16 --keys 16
+    #8,5T works 408050.3    59.72899  25502.05
+    $flink run -c SWJClusterT4_2 $jar --output $output_path --tput 85050 --w1size 30 --w1slide 45 --w2slide 45 --w2size 30 --run 25 --order ABC --freqA 15 --freqB 15 --freqC 15 --para 16 --keys 16 --filter true
     END=$(date +%s)
     DIFF=$((END - START))
     echo "SWJ_A2 ABC run w1(30,45) w2(30,45)"$loop " : "$DIFF"s" >>$resultFile
     $stopflink
     echo "------------ Flink stopped ------------" >>$resultFile
-    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-1-sr630-wn-a-25.out' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2/FOut_A2_45_ABC_'$loop'.txt'
-    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-0-sr630-wn-a-25.out' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2/FOut_A2_45_ABC_'$loop'.txt'
-    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-1-sr630-wn-a-25.log' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2/FLog_A2_45_ABC_'$loop'.txt'
-    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-0-sr630-wn-a-25.log' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2/FLog_A2_45_ABC_'$loop'.txt'
+    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-1-sr630-wn-a-25.out' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2_S2/FOut_A2S2_45_ABC_'$loop'.txt'
+    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-0-sr630-wn-a-25.out' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2_S2/FOut_A2S2_45_ABC_'$loop'.txt'
+    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-1-sr630-wn-a-25.log' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2_S2/FLog_A2S2_45_ABC_'$loop'.txt'
+    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-0-sr630-wn-a-25.log' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2_S2/FLog_A2S2_45_ABC_'$loop'.txt'
    #A2
     now=$(date +"%T")
     today=$(date +%d.%m.%y)
@@ -146,16 +182,16 @@ for loop in 1 2 3; do
     echo "Flink start" >>$resultFile
     $startflink
     START=$(date +%s)
-    # 3T MST
-    $flink run -c SWJCluster $jar --output $output_path --tput 3000 --w1size 30 --w1slide 45 --w2slide 45 --w2size 30 --run 25 --order BAC --freqA 30 --freqB 15 --para 16 --keys 16
+    # 8,5 T works 408176.0   220.90014  25504.63
+    $flink run -c SWJClusterT4_2 $jar --output $output_path --tput 85000 --w1size 30 --w1slide 45 --w2slide 45 --w2size 30 --run 25 --order BAC --freqA 15 --freqB 15 --freqC 15 --para 16 --keys 16 --filter true
     END=$(date +%s)
     DIFF=$((END - START))
     echo "SWJ_A2 BAC run w1(30,45) w2(30,45)"$loop " : "$DIFF"s" >>$resultFile
     $stopflink
     echo "------------ Flink stopped ------------" >>$resultFile
-    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-1-sr630-wn-a-25.out' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2/FOut_A2_45_BAC_'$loop'.txt'
-    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-0-sr630-wn-a-25.out' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2/FOut_A2_45_BAC_'$loop'.txt'
-    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-1-sr630-wn-a-25.log' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2/FLog_A2_45_BAC_'$loop'.txt'
-    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-0-sr630-wn-a-25.log' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2/FLog_A2_45_BAC_'$loop'.txt'
+    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-1-sr630-wn-a-25.out' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2_S2/FOut_A2S2_45_BAC_'$loop'.txt'
+    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-0-sr630-wn-a-25.out' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2_S2/FOut_A2S2_45_BAC_'$loop'.txt'
+    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-1-sr630-wn-a-25.log' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2_S2/FLog_A2S2_45_BAC_'$loop'.txt'
+    cp '/home/ziehn-ldap/flink-1.11.6_A2/log/''flink-ziehn-ldap -taskexecutor-0-sr630-wn-a-25.log' '/home/ziehn-ldap/BaselineExp/result_SWJ_A2_S2/FLog_A2S2_45_BAC_'$loop'.txt'
 done
 echo "Tasks executed"
