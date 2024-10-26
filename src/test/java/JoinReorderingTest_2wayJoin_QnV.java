@@ -875,4 +875,73 @@ public class JoinReorderingTest_2wayJoin_QnV {
         assertNotEquals(resultABC, resultBCA);
         assertNotEquals(resultABC, resultCBA);
     }
+
+    @Test
+    //Test Case with mixed windows
+    public void testMixedWindow() throws Exception {
+        // Set up the testing environment
+        w1Size = 60; // SWJ(60,30)
+        w1Slide = 30; //
+        w2Size = 5; // TW(5)
+        w2Slide = 5; //
+
+        timePropagation = "A";
+        String testCase = "MixedWindows";
+        // Execute each join operation with timestamp of A
+        //default case
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC =
+                new SWJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        // this is commutative it works without any 'magic' akka default
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBAC =
+                new SWJ_ab_BAC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        // this works via time Propagation of a.ts by default
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamACB =
+                new SWJ_ac_AC_w2_B_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        // consequently via commutativity this one also
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamCAB =
+                new SWJ_ac_CA_w2_B_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        // and then these two cases that never work because b and c could be to far apart from each other
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA =
+                new SWJ_bc_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamCBA =
+                new SWJ_bc_CB_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+
+
+        String outputPath = "./src/main/resources/resultSWJ_";
+        // Collect the results into lists
+        streamABC
+                .writeAsText(outputPath + "ABC_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        streamBAC
+                .writeAsText(outputPath + "BAC_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        streamACB
+                .writeAsText(outputPath + "ACB_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        streamCAB
+                .writeAsText(outputPath + "CAB_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        streamBCA
+                .writeAsText(outputPath + "BCA_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        streamCBA
+                .writeAsText(outputPath + "CBA_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+
+        env.execute();
+
+        final ExecutionEnvironment envBatch = ExecutionEnvironment.getExecutionEnvironment();
+        envBatch.setParallelism(1);
+
+        List<String> resultABC = envBatch.readTextFile(outputPath + "ABC_"+testCase+".csv").distinct().collect();
+        List<String> resultBAC = envBatch.readTextFile(outputPath + "BAC_"+testCase+".csv").distinct().collect();
+        List<String> resultACB = envBatch.readTextFile(outputPath + "ACB_"+testCase+".csv").distinct().collect();
+        List<String> resultCAB = envBatch.readTextFile(outputPath + "CAB_"+testCase+".csv").distinct().collect();
+        List<String> resultBCA = envBatch.readTextFile(outputPath + "BCA_"+testCase+".csv").distinct().collect();
+        List<String> resultCBA = envBatch.readTextFile(outputPath + "CBA_"+testCase+".csv").distinct().collect();
+
+        // Compare the results
+        assertEquals(resultABC.size(), resultBAC.size());
+        assertEquals(resultABC,resultBAC);
+        assertEquals(resultABC.size(), resultCAB.size());
+        assertEquals(resultABC,resultCAB);
+        assertEquals(resultABC.size(), resultACB.size());
+        assertEquals(resultABC,resultACB);
+        assertNotEquals(resultABC,resultBCA);
+        assertNotEquals(resultABC,resultCBA);
+    }
 }
