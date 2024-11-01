@@ -47,3 +47,7 @@ build/
 /scripts&instructions/examples_previous_paper/*
 /src/main/resources/QnV_large.csv
 /src/main/resources/QnV70_73.csv
+/DataAnalysis/*
+/figures/*
+/plans/*
+/queries/*
