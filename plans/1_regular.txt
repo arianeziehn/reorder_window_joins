@@ -1,2 +1,0 @@
-Query Execution Diagram:
-(Title.kind_id ⋈ Kind_Type.id)
