@@ -45,9 +45,10 @@ build/
 .DS_Store
 
 /scripts&instructions/examples_previous_paper/*
+/scripts&instructions/scripts/ThroughputAnalysis
 /src/main/resources/QnV_large.csv
 /src/main/resources/QnV70_73.csv
-/DataAnalysis/*
-/figures/*
-/plans/*
-/queries/*
+/DataAnalysis/
+/figures/
+/notes_and_todos/
+/scripts&instructions/scripts/
