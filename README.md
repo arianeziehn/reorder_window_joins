@@ -8,7 +8,7 @@ The performance validation was performed on a cluster, using the queries provide
 
 ## Key Highlights
 Query Reordering Tests: We test the impact of join reordering on various types of window joins by executing permutations of join orders, with a focus on preserving query semantics.
-- `src/main`: contains all queries used of our evaluation.
+- `src/main`: Contains all queries used of our evaluation.
 
 Commutativity and Associativity Cases: Each case outlined in the paper, including extended properties through time propagation, is implemented as a separate test, showcasing conditions under which reordering is possible.
 - `src/test`: Contains JUnit tests for each commutative and associative case, organized by window join type.
@@ -33,7 +33,7 @@ To run the performance validation:
 ## Repository Structure 
 
 ### src/main/java
-contains the join queries (Case Simulation (see src/test) and Performance Evaluation): 
+Contains the join queries (Case Simulation (see src/test) and Performance Evaluation): 
 #### Sliding Window Joins (SWJs): 
 - SWJClusterT4, contains the code for the cluster evaluation, i.e., a two-way window join $$ [[A X B]^{w_1}_{a.ts} x C]^{w_2} $$ with time propagation of timestamp A between w1 and w2 (_a_) including all its equivalent permutations for a tuple of size 4
 #### Session Window Joins (SeWJs):
@@ -42,10 +42,10 @@ contains the join queries (Case Simulation (see src/test) and Performance Evalua
 - IVJClusterT4, contains the code for the cluster evaluation, i.e., a two-way window join $$ [[A X B]^{w_1}_{a.ts} x C]^{w_2} $$ with time propagation of timestamp A between w1 and w2 (_a_) including all its equivalent permutations for a tuple of size 4
 
 #### util
-Contains helper function for the join queries, i.e., assigner functions, the sources and loggers. 
+Contains helper function for the join queries, e.g., assigner functions, the sources and loggers. 
 
 ### src/test 
-Applied Case Validation for window join Reordering (_QnVData uses real world data sample, else small synthetic data samples)
+Applied Case Validation for Window Join Reordering (_QnVData uses real world data sample, else small synthetic data samples)
 - CommutativeTest, test the Cases C1 (SWJ), C2 (SeWJ), and C3 and C4 (IVJ)
 - AssociativeTest, covers the Cases A1-A7, i.e., A1-A4 (SWJ), A5 (SeWJ), A6-A7 (IVJ)
 - JoinReorderingTest fixes false tests in CommutativeTest and AssociativeTest with our transformation rules.  
