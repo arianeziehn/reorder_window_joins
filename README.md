@@ -8,14 +8,14 @@ The performance validation was performed on a cluster, using the queries provide
 
 ## Key Highlights
 Query Reordering Tests: We test the impact of join reordering on various types of window joins by executing permutations of join orders, with a focus on preserving query semantics.
-- `src/test`: Contains JUnit tests for each commutative and associative case, organized by window join type.
-
-Commutativity and Associativity Cases: Each case outlined in the paper, including extended properties through time propagation, is implemented as a separate test, showcasing conditions under which reordering is possible.
 - `src/main`: contains all queries used of our evaluation.
 
-Synthetic and Real-World Data: We use both synthetic streams and real-world sensor data to evaluate performance and verify our transformation rules across a range of scenarios, while we use synthetic data only for performance evaluation.
+Commutativity and Associativity Cases: Each case outlined in the paper, including extended properties through time propagation, is implemented as a separate test, showcasing conditions under which reordering is possible.
+- `src/test`: Contains JUnit tests for each commutative and associative case, organized by window join type.
+
+Synthetic and Real-World Data: We use both synthetic streams and real-world sensor data to verify our transformation rules across a range of scenarios, while we use soly synthetic data for performance evaluation.
 - `src/main/resources`: Includes the samples of real-world datasets from QnV and AQ-Data.
-- `src/main/java/util`: contains our `artificalsourcefunctions` (T4 for cluster evaluation)
+- `src/main/java/util`: Contains our `artificalsourcefunctions` (T4 for cluster evaluation)
 
 ## Getting Started
 To run the applied case validation:
