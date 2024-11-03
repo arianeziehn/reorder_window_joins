@@ -13,6 +13,13 @@ import java.util.List;
 
 import static org.junit.Assert.*;
 
+/**
+ * This class contains test cases covering the four identified cases for commutativity, i.e., Case C1 for sliding window joins,
+ * Case C2 for Session Window Joins, and the Cases C3 and C4 for the IntervalJoin.
+ * The test consider a single key.
+ * In particular, it evaluates if a window join query [A x B]^W = [B x A]^W
+ */
+
 public class CommutativeTest {
 
     private StreamExecutionEnvironment env;
@@ -27,7 +34,7 @@ public class CommutativeTest {
         env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
 
-        // Create test streams A, B, C with some example data
+        // Create test streams A, B, C with some example data for SWJ and IVJ
         streamA = env.fromElements(
                 new Tuple3<>(1, 2, (1 * 60000L)),
                 new Tuple3<>(1, 3, (3 * 60000L)),
@@ -119,17 +126,17 @@ public class CommutativeTest {
 
     @Test
     //Case C1: s < l
-    public void testCaseC1() throws Exception {
+    public void CaseC1_s_lt_l() throws Exception {
         w1Size = 10;
         w1Slide = 5;
-        String testCase = "C1";
+        String testCase = "C1_s_lt_l";
         // Execute each join operation
         DataStream<Tuple6<Integer, Integer, Long, Integer, Integer, Long>> streamAB =
                 new SWJ_AB(streamA, streamB, w1Size, w1Slide).run();
         DataStream<Tuple6<Integer, Integer, Long, Integer, Integer, Long>> streamBA =
                 new SWJ_BA(streamA, streamB, w1Size, w1Slide).run();
 
-        String outputPath = "./src/main/resources/result_Commu_SWJ_";
+        String outputPath = "./src/main/resources/result_SWJ_";
         // Collect the results into lists
         streamAB
                 .writeAsText(outputPath + "AB_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
@@ -150,8 +157,8 @@ public class CommutativeTest {
     }
 
     @Test
-    //Case C1: s < l
-    public void testCaseC1_s_gt_l() throws Exception {
+    //Case C1: s > l
+    public void CaseC1_s_gt_l() throws Exception {
         w1Size = 5;
         w1Slide = 10;
         String testCase = "C1_s_gt_l";
@@ -161,7 +168,39 @@ public class CommutativeTest {
         DataStream<Tuple6<Integer, Integer, Long, Integer, Integer, Long>> streamBA =
                 new SWJ_BA(streamA, streamB, w1Size, w1Slide).run();
 
-        String outputPath = "./src/main/resources/result_Commu_SWJ_";
+        String outputPath = "./src/main/resources/result_SWJ_";
+        // Collect the results into lists
+        streamAB
+                .writeAsText(outputPath + "AB_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        streamBA
+                .writeAsText(outputPath + "BA_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+
+        env.execute();
+
+        final ExecutionEnvironment envBatch = ExecutionEnvironment.getExecutionEnvironment();
+        envBatch.setParallelism(1);
+
+        List<String> resultAB = envBatch.readTextFile(outputPath + "AB_" + testCase + ".csv").distinct().collect();
+        List<String> resultBA = envBatch.readTextFile(outputPath + "BA_" + testCase + ".csv").distinct().collect();
+
+        // Compare the results
+        assertEquals(resultAB.size(), resultBA.size());
+        assertEquals(resultAB, resultBA);
+    }
+
+    @Test
+    //Case C1: s = l
+    public void CaseC1_s_eq_l() throws Exception {
+        w1Size = 10;
+        w1Slide = 10;
+        String testCase = "C1_s_eq_l";
+        // Execute each join operation
+        DataStream<Tuple6<Integer, Integer, Long, Integer, Integer, Long>> streamAB =
+                new SWJ_AB(streamA, streamB, w1Size, w1Slide).run();
+        DataStream<Tuple6<Integer, Integer, Long, Integer, Integer, Long>> streamBA =
+                new SWJ_BA(streamA, streamB, w1Size, w1Slide).run();
+
+        String outputPath = "./src/main/resources/result_SWJ_";
         // Collect the results into lists
         streamAB
                 .writeAsText(outputPath + "AB_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
@@ -183,7 +222,8 @@ public class CommutativeTest {
 
     @Test
     //Case C2: Session Windows
-    public void testCaseC2() throws Exception {
+    public void CaseC2() throws Exception {
+        // irregular streams to create multiple sessions and test commutativity
         streamA = env.fromElements(
                 new Tuple3<>(1, 2, (1 * 60000L)),
                 new Tuple3<>(1, 3, (3 * 60000L)),
@@ -251,7 +291,7 @@ public class CommutativeTest {
                 new Tuple3<>(1, 3, (82 * 60000L))
         ).assignTimestampsAndWatermarks(new UDFs.ExtractTimestamp(1000));
 
-        w1Size = 4;
+        w1Size = 4; // gap
         String testCase = "C2";
         // Execute each join operation
         DataStream<Tuple6<Integer, Integer, Long, Integer, Integer, Long>> streamAB =
@@ -281,15 +321,15 @@ public class CommutativeTest {
 
     @Test
     //Case C3 IVJ equal boundaries
-    public void testCaseC3() throws Exception {
+    public void CaseC3() throws Exception {
         // Set up the testing environment
         w1Size = 10; // boundaries
         String testCase = "C3";
         // Execute each join operation
         DataStream<Tuple6<Integer, Integer, Long, Integer, Integer, Long>> streamAB =
-                new IVJ_AB(streamA, streamB, w1Size, w1Size).run();
+                new IVJ_AB(streamA, streamB, -w1Size, w1Size).run();
         DataStream<Tuple6<Integer, Integer, Long, Integer, Integer, Long>> streamBA =
-                new IVJ_BA(streamA, streamB, w1Size, w1Size).run();
+                new IVJ_BA(streamA, streamB, -w1Size, w1Size).run();
 
         String outputPath = "./src/main/resources/result_IVJ_";
         // Collect the results into lists
@@ -314,7 +354,7 @@ public class CommutativeTest {
 
     @Test
     //Case C4 IVJ un-equal-sized boundaries
-    public void testCaseC4_lB_lt_uB() throws Exception {
+    public void CaseC4_lB_lt_uB() throws Exception {
         // Set up the testing environment
         w1Size = -10; // lowerBound
         w1Slide = 0; // upperBound
@@ -346,7 +386,7 @@ public class CommutativeTest {
 
     @Test
     //Case C4 IVJ un equal-sized boundaries
-    public void testCaseC4_lB_gt_uB() throws Exception {
+    public void CaseC4_lB_gt_uB() throws Exception {
         // Set up the testing environment
         w1Size = 0; // lowerBound
         w1Slide = 10; // upperBound
@@ -377,8 +417,8 @@ public class CommutativeTest {
     }
 
     @Test
-    //Case C4 IVJ un-equal-sized boundaries
-    public void testCaseC4_lB_lt_uB_withBoundarySwap() throws Exception {
+    //Case C4 IVJ un-equal-sized boundaries with boundary swap (solution)
+    public void CaseC4_lB_lt_uB_withBoundarySwap() throws Exception {
         // Set up the testing environment
         w1Size = -10; // lowerBound
         w1Slide = 0; // upperBound
@@ -410,8 +450,8 @@ public class CommutativeTest {
     }
 
     @Test
-    //Case C4 IVJ un equal-sized boundaries
-    public void testCaseC4_lB_gt_uB_withBoundarySwap() throws Exception {
+    //Case C4 IVJ un equal-sized boundaries (solution)
+    public void CaseC4_lB_gt_uB_withBoundarySwap() throws Exception {
         // Set up the testing environment
         w1Size = 0; // lowerBound
         w1Slide = 10; // upperBound

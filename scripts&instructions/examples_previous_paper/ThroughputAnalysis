@@ -8,11 +8,11 @@ data1 <- read.csv(path, header = FALSE, sep =",")
 
 #path <- '/home/aziehn/resultQSEQ_E1_collection/FLog_'
 #path <- '/home/aziehn/BaselineExp/resultQSEQ_IVJ_T_E1/FLogS10_'
-path <- '/home/aziehn/FOut_IVJ_10_0_BAC_'
+path <- '/home/aziehn/FOut_A4_w1_gth_w2_30_ACB_'
 
 result=c()
 tput = 250*16
-for (i in 1:1){
+for (i in 1:4){
     data0 <- read.csv(paste(path, paste(i,".txt", sep=""), sep=""), header = FALSE, sep ="$")
     data0 <- data0[data0$V9 != "Inf",]
     dataAGG <- aggregate(data0$V9, by = list(data0$V3), FUN = mean, na.rm=TRUE)
@@ -34,12 +34,13 @@ mean(dataAGG$x)
 
 
 #path <- '/home/aziehn/FOut_A2S2_45_'
-path <- '/home/aziehn/FOut_A4_w1_gth_w2_45_'
-result_all = array(dim = c(6,4))
-perm <- c('ABC','ACB', 'BAC', 'BCA','CAB', 'CBA')
+path <- '/home/aziehn/FOut_A1S3_s2_'
+#result_all = array(dim = c(6,4))
+#perm <- c('ABC','ACB', 'BAC', 'BCA','CAB', 'CBA')
 
-#path <- '/home/aziehn/FOut_A3S2_s10_'
-path <- '/home/aziehn/FOut_IVJ_10_0_'
+path <- '/home/aziehn/FOut_A3S3_s2_'
+#path <- '/home/aziehn/FOut_IVJ_10_10_'
+# <- '/home/aziehn/ExpPaper2/IVJ_DiffR/FOut_IVJ_10_10_'
 result_all = array(dim = c(4,4))
 perm <- c('ABC','ACB', 'BAC','CAB')
 
@@ -47,7 +48,7 @@ row.names(result_all) <- perm
 for (j in perm){
 result=c()
 tput = (60000*16)*1.5
-for (i in 1:1){
+for (i in 1:3){
     data0 <- read.csv(paste(path,paste(j,'_', paste(i,'.txt', sep=""), sep=""), sep=""), header = FALSE, sep ="$")
     data0 <- data0[data0$V9 != 'Inf',]
     dataAGG1 <- aggregate(data0$V9, by = list(data0$V1,data0$V3), FUN = sum, na.rm=TRUE)
