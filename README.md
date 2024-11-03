@@ -1,19 +1,21 @@
 # Window Join Reordering 
 
-This repository provides the experimental setup, test cases, and data sources used to validate the theoretical findings of our study on WJ reordering.
+This repository provides the experimental setup, test cases, and data sources used to validate the theoretical findings of our study on WJ reordering on the stream processing system Apache Flink.
 
 Our work explores the commutativity and associativity properties of window joins under various conditions, and introduces transformation rules that enable reordering of multi-way window joins while preserving correctness. 
-The validation suite (see src/test) includes comprehensive JUnit test cases that demonstrate the effects of reordering for different WJ types, and window configurations on completeness and correctness.
-The performance validation was performed on a cluster, using the queries provides on src/main and the scripts available in scripts/instructions. 
+The validation suite (see `src/test`) includes comprehensive JUnit test cases that demonstrate the effects of reordering for different WJ types, and window configurations on completeness and correctness.
+The performance validation was performed on a cluster, using the queries provides on ` src/main` and the scripts available in `scripts&instructions`. 
 
 ## Key Highlights
 Query Reordering Tests: We test the impact of join reordering on various types of WJs by executing permutations of join orders, with a focus on preserving query semantics.
-Commutativity and Associativity Cases: Each case outlined in the paper, including those with extended properties through time propagation, is implemented as a separate test, showcasing conditions under which reordering is possible.
-Synthetic and Real-World Data: We use both synthetic streams and real-world sensor data to evaluate performance and verify our transformation rules across a range of scenarios.
+- `src/test`: Contains JUnit tests for each commutative and associative case, organized by WJ type.
 
-- src/tests: Contains JUnit tests for each commutative and associative case, organized by WJ type.
-- src/main: contains all queries used for our evaluation.
-- resources: Includes the samples of real-world datasets from QnV and AQ-Data.
+Commutativity and Associativity Cases: Each case outlined in the paper, including extended properties through time propagation, is implemented as a separate test, showcasing conditions under which reordering is possible.
+- `src/main`: contains all queries used of our evaluation.
+
+Synthetic and Real-World Data: We use both synthetic streams and real-world sensor data to evaluate performance and verify our transformation rules across a range of scenarios, while we use synthetic data only for performance evaluation.
+- `src/main/resources`: Includes the samples of real-world datasets from QnV and AQ-Data.
+- `src/main/java/util`: contains our `artificalsourcefunctions` (T4 for cluster evaluation)
 
 ## Getting Started
 To run the applied case validation:
