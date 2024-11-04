@@ -9,10 +9,12 @@ import org.apache.flink.util.Collector;
 import util.UDFs;
 
 /**
- * This is class runs a Session Window Join Query with the order [[B X C]^w2 x A]^w2 and return the result stream ABC
+ * This is class runs a Session Window Join Query with the order [[A X B]^w1 x C]^w2 and return the result stream ABC
+ * assumption: default query
+ * timePropagation: The timestamp (either 'A' or 'B') that is used for the stream AB in [AB x C]^w2
  */
 
-public class SeWJ_bc_BCA {
+public class SeWJ_ABC {
     DataStream<Tuple3<Integer, Integer, Long>> streamC;
     DataStream<Tuple3<Integer, Integer, Long>> streamA;
     DataStream<Tuple3<Integer, Integer, Long>> streamB;
@@ -21,7 +23,7 @@ public class SeWJ_bc_BCA {
     String timePropagation;
 
 
-    public SeWJ_bc_BCA(DataStream<Tuple3<Integer, Integer, Long>> streamA, DataStream<Tuple3<Integer, Integer, Long>> streamB, DataStream<Tuple3<Integer, Integer, Long>> streamC, int w1Size, int w2Size, String timePropagation) {
+    public SeWJ_ABC(DataStream<Tuple3<Integer, Integer, Long>> streamA, DataStream<Tuple3<Integer, Integer, Long>> streamB, DataStream<Tuple3<Integer, Integer, Long>> streamC, int w1Size, int w2Size, String timePropagation) {
         this.streamA = streamA;
         this.streamB = streamB;
         this.streamC = streamC;
@@ -32,7 +34,7 @@ public class SeWJ_bc_BCA {
 
     public DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> run() {
         // join A B
-        DataStream<Tuple6<Integer, Integer, Long, Integer, Integer, Long>> streamBC = streamB.join(streamC)
+        DataStream<Tuple6<Integer, Integer, Long, Integer, Integer, Long>> streamAB = streamA.join(streamB)
                 .where(new UDFs.getKeyT3())
                 .equalTo(new UDFs.getKeyT3())
                 .window(EventTimeSessionWindows.withGap(Time.minutes(gap_w1)))
@@ -41,16 +43,16 @@ public class SeWJ_bc_BCA {
                     public void join(Tuple3<Integer, Integer, Long> d1, Tuple3<Integer, Integer, Long> d2, Collector<Tuple6<Integer, Integer, Long, Integer, Integer, Long>> collector) throws Exception {
                         collector.collect(new Tuple6<>(d1.f0, d1.f1, d1.f2, d2.f0, d2.f1, d2.f2));
                     }
-                }).assignTimestampsAndWatermarks(new UDFs.ExtractTimestampBC(60000, timePropagation));
+                }).assignTimestampsAndWatermarks(new UDFs.ExtractTimestampAB(60000, timePropagation));
 
-        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC = streamBC.join(streamA)
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC = streamAB.join(streamC)
                 .where(new UDFs.getKeyT6())
                 .equalTo(new UDFs.getKeyT3())
                 .window(EventTimeSessionWindows.withGap(Time.minutes(gap_w2)))
                 .apply(new FlatJoinFunction<Tuple6<Integer, Integer, Long, Integer, Integer, Long>, Tuple3<Integer, Integer, Long>, Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>>() {
 
                     public void join(Tuple6<Integer, Integer, Long, Integer, Integer, Long> d1, Tuple3<Integer, Integer, Long> d2, Collector<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> collector) throws Exception {
-                        collector.collect(new Tuple9<>(d2.f0, d2.f1, d2.f2, d1.f0, d1.f1, d1.f2, d1.f3, d1.f4, d1.f5));
+                        collector.collect(new Tuple9<>(d1.f0, d1.f1, d1.f2, d1.f3, d1.f4, d1.f5, d2.f0, d2.f1, d2.f2));
                     }
                 });
 

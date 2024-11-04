@@ -11,11 +11,10 @@ import util.UDFs;
 /**
  * This class runs a Sliding Window Join Query with the order [[A X B]^w1 x C]^w2 and returns the stream ABC.
  * assumption: default query
- * parameters:
  * timePropagation: The timestamp (either 'A' or 'B') that is used for the stream AB in [AB x C]^w2
  */
 
-public class SWJ_ab_ABC {
+public class SWJ_ABC {
     DataStream<Tuple3<Integer, Integer, Long>> streamC;
     DataStream<Tuple3<Integer, Integer, Long>> streamA;
     DataStream<Tuple3<Integer, Integer, Long>> streamB;
@@ -26,7 +25,7 @@ public class SWJ_ab_ABC {
     String timePropagation;
 
 
-    public SWJ_ab_ABC(DataStream<Tuple3<Integer, Integer, Long>> streamA, DataStream<Tuple3<Integer, Integer, Long>> streamB, DataStream<Tuple3<Integer, Integer, Long>> streamC, int w1Size, int w1Slide, int w2Size, int w2Slide, String timePropagation) {
+    public SWJ_ABC(DataStream<Tuple3<Integer, Integer, Long>> streamA, DataStream<Tuple3<Integer, Integer, Long>> streamB, DataStream<Tuple3<Integer, Integer, Long>> streamC, int w1Size, int w1Slide, int w2Size, int w2Slide, String timePropagation) {
         this.streamA = streamA;
         this.streamB = streamB;
         this.streamC = streamC;
