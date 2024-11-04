@@ -9,8 +9,8 @@ All three classes incorporate all proposed features to create equivalent query p
 $$[[A x B]^W1 x C ]^W1$$ where the order of interest have to be provided, e.g., -order ABC. 
 
 ## Maximal Sustainable Throughput
-We evaluate the maximal maintainable throughput in preliminary experiments (Note that this is an exploration process). Depending on your machines, 
-you may need to adjust the throughput's (i.e., the ingestion rate) several time, checking if latency does not constantly increase during execution and that 
+We evaluate the maximal maintainable throughput in preliminary experiments (Note that this is an exploration process and you have to run each query and permutation separately). 
+Depending on your machines, you need to adjust the throughput's (i.e., the ingestion rate) several time, checking if latency does not constantly increase during execution and that 
 approximately the ingestion rate equals the result of the throughput logger, else that indicates that the sources are throttled due to 
 backpressure in the system. 
 A maximal sustainable throughput is the maximal throughput the system can reach without creating backpressure on the upstream operators of the execution pipeline.
