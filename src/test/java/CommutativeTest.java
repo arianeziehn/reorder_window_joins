@@ -16,7 +16,7 @@ import static org.junit.Assert.*;
 /**
  * This class contains test cases covering the four identified cases for commutativity, i.e., Case C1 for sliding window joins,
  * Case C2 for Session Window Joins, and the Cases C3 and C4 for the IntervalJoin.
- * The test consider a single key.
+ * The test considers a single key.
  * In particular, it evaluates if a window join query [A x B]^W = [B x A]^W
  */
 

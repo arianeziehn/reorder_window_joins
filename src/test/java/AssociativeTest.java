@@ -14,6 +14,12 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
+/**
+ * This class contains test cases covering the seven identified cases for associativity, i.e., Case A1-A4 for sliding window joins,
+ * Case A5 for Session Window Joins, and the Cases A6 and A7 for the IntervalJoin.
+ * The test considers a single key.
+ * In particular, it evaluates if a window join query [[A x B]^W1 X C]^W2 = [[B x C]^W2 X A]^W1
+ */
 public class AssociativeTest {
 
     private StreamExecutionEnvironment env;
@@ -164,30 +170,29 @@ public class AssociativeTest {
         ).assignTimestampsAndWatermarks(new UDFs.ExtractTimestamp(1000));
     }
 
-    // Proof Section of Paper
     @Test
-    //Case A1: W1 = W2, W2.s < W2.l // Proof Section of Paper
-    public void testCaseA1() throws Exception {
+    //Case A1: W1 = W2, W2.s < W2.l
+    public void CaseA1() throws Exception {
         w1Size = 10;
         w1Slide = 5;
         w2Size = 10;
         w2Slide = 5;
-        timePropagation = "A";
-        String testCase = "A1_proof_case";
+        String testCase = "A1_";
         // Execute each join operation
         // first we use a in q_1 = ABC_a and q_2 = BCA_a
+        timePropagation = "A";
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC_a =
-                new SWJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA_a =
-                new SWJ_bc_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         // second we use b in q_1 = ABC_b and q_2 = BCA_b
         timePropagation = "B";
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC_b =
-                new SWJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA_b =
-                new SWJ_bc_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
 
-        String outputPath = "./src/main/resources/resultSWJ_";
+        String outputPath = "./src/main/resources/result_SWJ_";
         // Collect the results into lists
         streamABC_a
                 .writeAsText(outputPath + "ABC_a_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
@@ -215,28 +220,29 @@ public class AssociativeTest {
     }
 
     @Test
-    //Case A1: W1 = W2, W2.s < W2.l // Proof Section of Paper
-    public void testCaseA1_outer_edge_case() throws Exception {
+    //Case A1: W1 = W2, W2.s < W2.l
+    public void CaseA1_outer_edge_case() throws Exception {
         w1Size = 10;
         w1Slide = 9;
         w2Size = 10;
         w2Slide = 9;
-        timePropagation = "A";
-        String testCase = "A1_proof_case";
+
+        String testCase = "A1_l10_s9";
         // Execute each join operation
         // first we use a in q_1 = ABC_a and q_2 = BCA_a
+        timePropagation = "A";
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC_a =
-                new SWJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA_a =
-                new SWJ_bc_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         // second we use b in q_1 = ABC_b and q_2 = BCA_b
         timePropagation = "B";
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC_b =
-                new SWJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA_b =
-                new SWJ_bc_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
 
-        String outputPath = "./src/main/resources/resultSWJ_";
+        String outputPath = "./src/main/resources/result_SWJ_";
         // Collect the results into lists
         streamABC_a
                 .writeAsText(outputPath + "ABC_a_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
@@ -264,28 +270,28 @@ public class AssociativeTest {
     }
 
     @Test
-    //Case A1: W1 = W2, W2.s < W2.l // Proof Section of Paper
-    public void testCaseA1_outer_edge_case_2() throws Exception {
+    //Case A1: W1 = W2, W2.s < W2.l
+    public void CaseA1_outer_edge_case_2() throws Exception {
         w1Size = 20;
         w1Slide = 15;
         w2Size = 20;
         w2Slide = 15;
         timePropagation = "A";
-        String testCase = "A1_proof_case";
+        String testCase = "A1_l20_s15";
         // Execute each join operation
         // first we use a in q_1 = ABC_a and q_2 = BCA_a
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC_a =
-                new SWJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA_a =
-                new SWJ_bc_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         // second we use b in q_1 = ABC_b and q_2 = BCA_b
         timePropagation = "B";
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC_b =
-                new SWJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA_b =
-                new SWJ_bc_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
 
-        String outputPath = "./src/main/resources/resultSWJ_";
+        String outputPath = "./src/main/resources/result_SWJ_";
         // Collect the results into lists
         streamABC_a
                 .writeAsText(outputPath + "ABC_a_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
@@ -314,28 +320,29 @@ public class AssociativeTest {
 
     @Test
     //Case A2 W1=W2, W2.s >= W2.l
-    public void testCaseA2() throws Exception {
+    public void CaseA2() throws Exception {
         // Set up the testing environment
         w1Size = 10;
         w1Slide = 15;
         w2Size = 10;
         w2Slide = 15;
-        timePropagation = "A";
-        String testCase = "A2_proof_case";
+
+        String testCase = "A2_l10_s15";
         // Execute each join operation
         // first we use a in q_1 = ABC_a and q_2 = BCA_a
+        timePropagation = "A";
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC_a =
-                new SWJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA_a =
-                new SWJ_bc_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         // second we use b in q_1 = ABC_b and q_2 = BCA_b
         timePropagation = "B";
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC_b =
-                new SWJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA_b =
-                new SWJ_bc_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
 
-        String outputPath = "./src/main/resources/resultSWJ_";
+        String outputPath = "./src/main/resources/result_SWJ_";
         // Collect the results into lists
         streamABC_a
                 .writeAsText(outputPath + "ABC_a_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
@@ -365,28 +372,28 @@ public class AssociativeTest {
 
     @Test
     //Case A2 W1=W2, W2.s >= W2.l
-    public void testCaseA2_TWJ() throws Exception {
+    public void CaseA2_TWJ() throws Exception {
         // Set up the testing environment
         w1Size = 10;
         w1Slide = 10;
         w2Size = 10;
         w2Slide = 10;
         timePropagation = "A";
-        String testCase = "A2_proof_case";
+        String testCase = "A2_l_s10";
         // Execute each join operation
         // first we use a in q_1 = ABC_a and q_2 = BCA_a
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC_a =
-                new SWJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA_a =
-                new SWJ_bc_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         // second we use b in q_1 = ABC_b and q_2 = BCA_b
         timePropagation = "B";
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC_b =
-                new SWJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA_b =
-                new SWJ_bc_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
 
-        String outputPath = "./src/main/resources/resultSWJ_";
+        String outputPath = "./src/main/resources/result_SWJ_";
         // Collect the results into lists
         streamABC_a
                 .writeAsText(outputPath + "ABC_a_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
@@ -416,28 +423,28 @@ public class AssociativeTest {
 
     @Test
     //Case A2 W1=W2, W2.s >= W2.l
-    public void testCaseA2_slide_no_divisor() throws Exception {
+    public void CaseA2_slide_no_divisor() throws Exception {
         // Set up the testing environment
         w1Size = 10;
         w1Slide = 13;
         w2Size = 10;
         w2Slide = 13;
         timePropagation = "A";
-        String testCase = "A2_proof_case";
+        String testCase = "A2_slide_no_divisor";
         // Execute each join operation
         // first we use a in q_1 = ABC_a and q_2 = BCA_a
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC_a =
-                new SWJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA_a =
-                new SWJ_bc_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         // second we use b in q_1 = ABC_b and q_2 = BCA_b
         timePropagation = "B";
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC_b =
-                new SWJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA_b =
-                new SWJ_bc_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
 
-        String outputPath = "./src/main/resources/resultSWJ_";
+        String outputPath = "./src/main/resources/result_SWJ_";
         // Collect the results into lists
         streamABC_a
                 .writeAsText(outputPath + "ABC_a_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
@@ -468,27 +475,27 @@ public class AssociativeTest {
 
     @Test
     //Case A3 W1 != W2, W2.s < W2.l and W1 is non overlapping
-    public void testCaseA3_w1_gth_w2() throws Exception {
+    public void CaseA3_w1_gt_w2() throws Exception {
         // Set up the testing environment
         w1Size = 30;
         w1Slide = 15;
         w2Size = 15;
         w2Slide = 5;
         timePropagation = "A";
-        String testCase = "A3_proof_case_w1_gth_w2";
+        String testCase = "A3_w1_gt_w2";
         // Execute each join operation
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC_a =
-                new SWJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA_a =
-                new SWJ_bc_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         // Execute each join operation
         timePropagation = "B";
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC_b =
-                new SWJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA_b =
-                new SWJ_bc_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
 
-        String outputPath = "./src/main/resources/resultSWJ_";
+        String outputPath = "./src/main/resources/result_SWJ_";
         // Collect the results into lists
         streamABC_a
                 .writeAsText(outputPath + "ABC_a_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
@@ -517,27 +524,28 @@ public class AssociativeTest {
 
     @Test
     //Case A3 W1 != W2, W2.s < W2.l and W1 is non overlapping
-    public void testCaseA3_w1_lth_w2() throws Exception {
+    public void CaseA3_w1_lt_w2() throws Exception {
         // Set up the testing environment
         w1Size = 10;
         w1Slide = 5;
         w2Size = 15;
         w2Slide = 5;
-        timePropagation = "A";
-        String testCase = "A3_proof_case_w1_lth_w2";
+
+        String testCase = "A3_w1_lt_w2";
         // Execute each join operation
+        timePropagation = "A";
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC_a =
-                new SWJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA_a =
-                new SWJ_bc_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         // Execute each join operation
         timePropagation = "B";
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC_b =
-                new SWJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA_b =
-                new SWJ_bc_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
 
-        String outputPath = "./src/main/resources/resultSWJ_";
+        String outputPath = "./src/main/resources/result_SWJ_";
         // Collect the results into lists
         streamABC_a
                 .writeAsText(outputPath + "ABC_a_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
@@ -566,27 +574,28 @@ public class AssociativeTest {
 
     @Test
     //Case A3 W1 != W2, W2.s < W2.l and W1.l >= W2.l
-    public void testCaseA3_w1_non_overlapping() throws Exception {
+    public void Case_MixedWindow_w1_non_overlapping() throws Exception {
         // Set up the testing environment
         w1Size = 20;
         w1Slide = 30;
         w2Size = 15;
         w2Slide = 5;
-        timePropagation = "A";
-        String testCase = "A3_proof_case";
+
+        String testCase = "A3_A4";
         // Execute each join operation
+        timePropagation = "A";
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC_a =
-                new SWJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA_a =
-                new SWJ_bc_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         // Execute each join operation
         timePropagation = "B";
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC_b =
-                new SWJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA_b =
-                new SWJ_bc_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
 
-        String outputPath = "./src/main/resources/resultSWJ_";
+        String outputPath = "./src/main/resources/result_SWJ_";
         // Collect the results into lists
         streamABC_a
                 .writeAsText(outputPath + "ABC_a_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
@@ -614,27 +623,28 @@ public class AssociativeTest {
     }
     @Test
     //Case A4 W1 != W2, W2.s >= W2.l and W1.l >= W2.l
-    public void testCaseA4_slide_equal_w1_gth_w2() throws Exception {
+    public void CaseA4_slide_eq_w1_gt_w2() throws Exception {
         // Set up the testing environment
         w1Size = 20;
         w1Slide = 30;
         w2Size = 15;
         w2Slide = 30;
-        timePropagation = "A";
-        String testCase = "A4_proof_case";
+
+        String testCase = "A4_w1_gt_w2";
         // Execute each join operation with timestamp of A
+        timePropagation = "A";
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC_a =
-                new SWJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA_a =
-                new SWJ_bc_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         // Execute each join operation with timestamp of B
         timePropagation = "B";
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC_b =
-                new SWJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA_b =
-                new SWJ_bc_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
 
-        String outputPath = "./src/main/resources/resultSWJ_";
+        String outputPath = "./src/main/resources/result_SWJ_";
         // Collect the results into lists
         streamABC_a
                 .writeAsText(outputPath + "ABC_a_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
@@ -663,27 +673,28 @@ public class AssociativeTest {
 
     @Test
     //Case A4 W1 != W2, W2.s >= W2.l and W1.l >= W2.l
-    public void testCaseA4_slide_equal_w1_lth_w2() throws Exception {
+    public void CaseA4_slide_eq_w1_lt_w2() throws Exception {
         // Set up the testing environment
         w1Size = 10;
         w1Slide = 15;
         w2Size = 15;
         w2Slide = 20;
-        timePropagation = "A";
-        String testCase = "A4_proof_case";
+
+        String testCase = "A4_w1_lt_w2";
         // Execute each join operation with timestamp of A
+        timePropagation = "A";
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC_a =
-                new SWJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA_a =
-                new SWJ_bc_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         // Execute each join operation with timestamp of B
         timePropagation = "B";
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC_b =
-                new SWJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA_b =
-                new SWJ_bc_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
 
-        String outputPath = "./src/main/resources/resultSWJ_";
+        String outputPath = "./src/main/resources/result_SWJ_";
         // Collect the results into lists
         streamABC_a
                 .writeAsText(outputPath + "ABC_a_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
@@ -712,27 +723,28 @@ public class AssociativeTest {
 
     @Test
     //Case A4 W1 != W2, W2.s >= W2.l and W1.l >= W2.l
-    public void testCaseA4_slide_equal_w1_lth_w2_s1_gth_s2() throws Exception {
+    public void CaseA4_slides_eq_w1_lt_w2_s1_gt_s2() throws Exception {
         // Set up the testing environment
         w1Size = 10;
         w1Slide = 20;
         w2Size = 15;
         w2Slide = 15;
-        timePropagation = "A";
-        String testCase = "A4_proof_case";
+
+        String testCase = "A4_w1_lt_w2_s1_gt_s2";
         // Execute each join operation with timestamp of A
+        timePropagation = "A";
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC_a =
-                new SWJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA_a =
-                new SWJ_bc_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         // Execute each join operation with timestamp of B
         timePropagation = "B";
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC_b =
-                new SWJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA_b =
-                new SWJ_bc_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
 
-        String outputPath = "./src/main/resources/resultSWJ_";
+        String outputPath = "./src/main/resources/result_SWJ_";
         // Collect the results into lists
         streamABC_a
                 .writeAsText(outputPath + "ABC_a_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
@@ -761,27 +773,28 @@ public class AssociativeTest {
 
     @Test
     //Case A4 W1 != W2, W2.s >= W2.l and W1.l >= W2.l
-    public void testCaseA4_2TWs_w1_gth_w2() throws Exception {
+    public void CaseA4_2TWJs_w1_gt_w2() throws Exception {
         // Set up the testing environment
         w1Size = 20;
         w1Slide = 20;
         w2Size = 15;
         w2Slide = 15;
-        timePropagation = "A";
-        String testCase = "A4_proof_case";
+
+        String testCase = "A4_2TWJs";
         // Execute each join operation with timestamp of A
+        timePropagation = "A";
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC_a =
-                new SWJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA_a =
-                new SWJ_bc_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         // Execute each join operation with timestamp of B
         timePropagation = "B";
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC_b =
-                new SWJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA_b =
-                new SWJ_bc_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
 
-        String outputPath = "./src/main/resources/resultSWJ_";
+        String outputPath = "./src/main/resources/result_SWJ_";
         // Collect the results into lists
         streamABC_a
                 .writeAsText(outputPath + "ABC_a_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
@@ -810,27 +823,27 @@ public class AssociativeTest {
 
     @Test
     //Case A4 W1 != W2, W2.s >= W2.l and W1.l >= W2.l
-    public void testCaseA4_slide_neq_w1_gth_w2() throws Exception {
+    public void CaseA4_slides_neq_w1_gt_w2() throws Exception {
         // Set up the testing environment
         w1Size = 20;
         w1Slide = 25;
         w2Size = 15;
         w2Slide = 15;
         timePropagation = "A";
-        String testCase = "A4_proof_case";
+        String testCase = "A4_slides_neq_w1_gt_w2";
         // Execute each join operation with timestamp of A
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC_a =
-                new SWJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA_a =
-                new SWJ_bc_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         // Execute each join operation with timestamp of B
         timePropagation = "B";
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC_b =
-                new SWJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA_b =
-                new SWJ_bc_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
 
-        String outputPath = "./src/main/resources/resultSWJ_";
+        String outputPath = "./src/main/resources/result_SWJ_";
         // Collect the results into lists
         streamABC_a
                 .writeAsText(outputPath + "ABC_a_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
@@ -859,27 +872,28 @@ public class AssociativeTest {
 
     @Test
     //Case A4 W1 != W2, W2.s >= W2.l and W1.l >= W2.l
-    public void testCaseA4_2TWs_w1_lth_w2() throws Exception {
+    public void CaseA4_2TWs_w1_lt_w2() throws Exception {
         // Set up the testing environment
         w1Size = 10;
         w1Slide = 10;
         w2Size = 25;
         w2Slide = 25;
-        timePropagation = "A";
-        String testCase = "A4_proof_case";
+
+        String testCase = "A4_2TWs_w1_lt_w2";
         // Execute each join operation with timestamp of A
+        timePropagation = "A";
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC_a =
-                new SWJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA_a =
-                new SWJ_bc_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         // Execute each join operation with timestamp of B
         timePropagation = "B";
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC_b =
-                new SWJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA_b =
-                new SWJ_bc_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
 
-        String outputPath = "./src/main/resources/resultSWJ_";
+        String outputPath = "./src/main/resources/result_SWJ_";
         // Collect the results into lists
         streamABC_a
                 .writeAsText(outputPath + "ABC_a_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
@@ -908,27 +922,28 @@ public class AssociativeTest {
 
     @Test
     //Case A4 W1 != W2, W2.s >= W2.l and W1.l >= W2.l
-    public void testCaseA4_slide_different_w1_lth_w2_s1_lth_s2() throws Exception {
+    public void CaseA4_slides_neq_w1_lt_w2_s1_lt_s2() throws Exception {
         // Set up the testing environment
         w1Size = 10;
         w1Slide = 15;
         w2Size = 25;
         w2Slide = 35;
-        timePropagation = "A";
-        String testCase = "A4_proof_case";
+
+        String testCase = "A4_w1_lt_w2_s1_lt_s2";
         // Execute each join operation with timestamp of A
+        timePropagation = "A";
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC_a =
-                new SWJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA_a =
-                new SWJ_bc_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         // Execute each join operation with timestamp of B
         timePropagation = "B";
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC_b =
-                new SWJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA_b =
-                new SWJ_bc_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
 
-        String outputPath = "./src/main/resources/resultSWJ_";
+        String outputPath = "./src/main/resources/result_SWJ_";
         // Collect the results into lists
         streamABC_a
                 .writeAsText(outputPath + "ABC_a_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
@@ -957,25 +972,26 @@ public class AssociativeTest {
 
     @Test
     //Case A4 W1 != W2, W2.s >= W2.l and W1.l >= W2.l
-    public void testCaseA4_slide_different_w1_lth_w2_s1_gth_s2() throws Exception {
+    public void CaseA4_slide_neq_w1_lt_w2_s1_gt_s2() throws Exception {
         // Set up the testing environment
         w1Size = 10;
         w1Slide = 45;
         w2Size = 25;
         w2Slide = 25;
-        timePropagation = "A";
-        String testCase = "A4_proof_case";
+
+        String testCase = "A4_w1_lt_w2_s1_gt_s2";
         // Execute each join operation with timestamp of A
+        timePropagation = "A";
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC_a =
-                new SWJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA_a =
-                new SWJ_bc_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         // Execute each join operation with timestamp of B
         timePropagation = "B";
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC_b =
-                new SWJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA_b =
-                new SWJ_bc_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
 
         String outputPath = "./src/main/resources/resultSWJ_";
         // Collect the results into lists
@@ -1006,27 +1022,28 @@ public class AssociativeTest {
 
     @Test
     //Case A4 W1 != W2, W2.s >= W2.l and W1.l >= W2.l
-    public void testCaseA4_slide_different_w1_eq_w2() throws Exception {
+    public void CaseA4_slide_neq_w1_eq_w2() throws Exception {
         // Set up the testing environment
         w1Size = 20;
         w1Slide = 20;
         w2Size = 20;
         w2Slide = 30;
-        timePropagation = "A";
-        String testCase = "A4_proof_case";
+
+        String testCase = "A4_w1_eq_w2";
         // Execute each join operation with timestamp of A
+        timePropagation = "A";
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC_a =
-                new SWJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA_a =
-                new SWJ_bc_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         // Execute each join operation with timestamp of B
         timePropagation = "B";
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC_b =
-                new SWJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA_b =
-                new SWJ_bc_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
 
-        String outputPath = "./src/main/resources/resultSWJ_";
+        String outputPath = "./src/main/resources/result_SWJ_";
         // Collect the results into lists
         streamABC_a
                 .writeAsText(outputPath + "ABC_a_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
@@ -1055,7 +1072,7 @@ public class AssociativeTest {
 
     @Test
     //Case A5: Session Windows
-    public void testCaseA5() throws Exception {
+    public void CaseA5() throws Exception {
         streamA = env.fromElements(
                 new Tuple3<>(1, 2, (5*60000L)),
                 new Tuple3<>(1, 3, (14*60000L))
@@ -1096,22 +1113,23 @@ public class AssociativeTest {
 
         w1Size = 5;
         w2Size = 5;
-        timePropagation = "A";
-        String testCase = "A5_proof_case";
+
+        String testCase = "A5_";
         // Execute each join operation
+        timePropagation = "A";
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC_a =
-                new SeWJ_ab_ABC(streamA, streamB, streamC, w1Size, w2Size, timePropagation).run();
+                new SeWJ_ABC(streamA, streamB, streamC, w1Size, w2Size, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA_a =
-                new SeWJ_bc_BCA(streamA, streamB, streamC, w1Size, w2Size, timePropagation).run();
+                new SeWJ_BCA(streamA, streamB, streamC, w1Size, w2Size, timePropagation).run();
 
         // Execute each join operation with timestamp of B
         timePropagation = "B";
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC_b =
-                new SeWJ_ab_ABC(streamA, streamB, streamC, w1Size, w2Size, timePropagation).run();
+                new SeWJ_ABC(streamA, streamB, streamC, w1Size, w2Size, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA_b =
-                new SeWJ_bc_BCA(streamA, streamB, streamC, w1Size, w2Size, timePropagation).run();
+                new SeWJ_BCA(streamA, streamB, streamC, w1Size, w2Size, timePropagation).run();
 
-        String outputPath = "./src/main/resources/resultSeWJ_";
+        String outputPath = "./src/main/resources/result_SeWJ_";
         // Collect the results into lists
         streamABC_a
                 .writeAsText(outputPath + "ABC_a_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
@@ -1139,28 +1157,28 @@ public class AssociativeTest {
 
     @Test
     //Case A6 IVJ lB = uB
-    public void testCaseA6_w1_eq_w2() throws Exception {
+    public void CaseA6_lB_eq_uB() throws Exception {
         // Set up the testing environment
         w1Size = -10; // lB W1
         w1Slide = 10; // uB W1
         w2Size = -10; // lB W1
         w2Slide = 10; // uB W1
 
-        timePropagation = "A";
-        String testCase = "A6_proof_case_lB_eq_uB_w1_eq_w2";
+        String testCase = "A6_lB_eq_uB";
         // Execute each join operation with timestamp of A
+        timePropagation = "A";
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC_a =
-                new IVJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new IVJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA_a =
-                new IVJ_bc_BCA(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new IVJ_BCA(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         // Execute each join operation with timestamp of B
         timePropagation = "B";
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC_b =
-                new IVJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new IVJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA_b =
-                new IVJ_bc_BCA(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new IVJ_BCA(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
 
-        String outputPath = "./src/main/resources/resultIVJ_";
+        String outputPath = "./src/main/resources/result_IVJ_";
         // Collect the results into lists
         streamABC_a
                 .writeAsText(outputPath + "ABC_a_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
@@ -1189,7 +1207,7 @@ public class AssociativeTest {
 
     @Test
     //Case A6 IVJ lB = uB
-    public void testCaseA6_w1_neq_w2() throws Exception {
+    public void CaseA6_w1_neq_w2() throws Exception {
         // Set up the testing environment
         w1Size = -6; // lB W1
         w1Slide = 6; // uB W1
@@ -1197,20 +1215,20 @@ public class AssociativeTest {
         w2Slide = 10; // uB W1
 
         timePropagation = "A";
-        String testCase = "A6_proof_case_lB_eq_uB_w1_eq_w2";
+        String testCase = "A6_lB_eq_uB_w1_eq_w2";
         // Execute each join operation with timestamp of A
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC_a =
-                new IVJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new IVJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA_a =
-                new IVJ_bc_BCA(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new IVJ_BCA(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         // Execute each join operation with timestamp of B
         timePropagation = "B";
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC_b =
-                new IVJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new IVJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA_b =
-                new IVJ_bc_BCA(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new IVJ_BCA(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
 
-        String outputPath = "./src/main/resources/resultIVJ_";
+        String outputPath = "./src/main/resources/result_IVJ_";
         // Collect the results into lists
         streamABC_a
                 .writeAsText(outputPath + "ABC_a_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
@@ -1239,28 +1257,29 @@ public class AssociativeTest {
 
     @Test
     //Case A6 IVJ lB = uB
-    public void testCaseA7() throws Exception {
+    public void CaseA7() throws Exception {
         // Set up the testing environment
         w1Size = -5; // lB W1
         w1Slide = 0; // uB W1
         w2Size = -7; // lB W1
         w2Slide = 7; // uB W1
 
-        timePropagation = "A";
-        String testCase = "A7_proof_case_lB_eq_uB_w1_neq_w2";
+
+        String testCase = "A7_lB_eq_uB_w1_neq_w2";
         // Execute each join operation with timestamp of A
+        timePropagation = "A";
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC_a =
-                new IVJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new IVJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA_a =
-                new IVJ_bc_BCA(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new IVJ_BCA(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         // Execute each join operation with timestamp of B
         timePropagation = "B";
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC_b =
-                new IVJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new IVJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA_b =
-                new IVJ_bc_BCA(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new IVJ_BCA(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
 
-        String outputPath = "./src/main/resources/resultIVJ_";
+        String outputPath = "./src/main/resources/result_IVJ_";
         // Collect the results into lists
         streamABC_a
                 .writeAsText(outputPath + "ABC_a_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
