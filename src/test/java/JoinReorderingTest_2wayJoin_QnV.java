@@ -37,7 +37,7 @@ public class JoinReorderingTest_2wayJoin_QnV {
         String file = "./src/main/resources/QnV_R2000070.csv";
         String filePM = "./src/main/resources/luftdaten_11245.csv";
         // the number of keys, should be equals or more as parallelism
-        Integer para = 2; // this is 16/3 TODO make it automatic
+        Integer para = 2;
         Integer numberOfKeys = 5;
         Integer velFilter = 90;
         Integer quaFilter = 80;
@@ -62,10 +62,9 @@ public class JoinReorderingTest_2wayJoin_QnV {
                 .assignTimestampsAndWatermarks(new UDFs.ExtractTimestamp(180000));
     }
 
-
     @Test
     //Case A1: W1=W2, s < l
-    public void testCaseA1() throws Exception {
+    public void CaseA1() throws Exception {
         w1Size = 10;
         w1Slide = 5;
         w2Size = 10;
@@ -75,64 +74,65 @@ public class JoinReorderingTest_2wayJoin_QnV {
         // Execute each join operation
         //default case
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC =
-                new SWJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
-        // this is commutative it works without any 'magic' akka default 
+                new SWJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        // default commutative combination
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBAC =
-                new SWJ_ab_BAC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
-        // this works via time Propagation of a.ts by default 
+                new SWJ_BAC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        // associative pairs
+        // this works via time Propagation of a.ts by default
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamACB =
-                new SWJ_ac_AC_w2_B_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
-        // consequently via commutativity this one also
+                new SWJ_AC_w2_B_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        // consequently via commutativity this permutation also
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamCAB =
-                new SWJ_ac_CA_w2_B_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_CA_w2_B_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         // and then these two cases that never work because b and c could be to far apart from each other
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA =
-                new SWJ_bc_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamCBA =
-                new SWJ_bc_CB_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_CB_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
 
 
-        String outputPath = "./src/main/resources/resultSWJ_";
+        String outputPath = "./src/main/resources/result_SWJ_";
         // Collect the results into lists
         streamABC
-                .writeAsText(outputPath + "ABC_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+                .writeAsText(outputPath + "ABC_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
         streamBAC
-                .writeAsText(outputPath + "BAC_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+                .writeAsText(outputPath + "BAC_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
         streamACB
-                .writeAsText(outputPath + "ACB_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+                .writeAsText(outputPath + "ACB_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
         streamCAB
-                .writeAsText(outputPath + "CAB_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+                .writeAsText(outputPath + "CAB_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
         streamBCA
-                .writeAsText(outputPath + "BCA_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+                .writeAsText(outputPath + "BCA_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
         streamCBA
-                .writeAsText(outputPath + "CBA_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+                .writeAsText(outputPath + "CBA_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
 
         env.execute();
 
         final ExecutionEnvironment envBatch = ExecutionEnvironment.getExecutionEnvironment();
         envBatch.setParallelism(1);
 
-        List<String> resultABC = envBatch.readTextFile(outputPath + "ABC_"+testCase+".csv").distinct().collect();
-        List<String> resultBAC = envBatch.readTextFile(outputPath + "BAC_"+testCase+".csv").distinct().collect();
-        List<String> resultACB = envBatch.readTextFile(outputPath + "ACB_"+testCase+".csv").distinct().collect();
-        List<String> resultCAB = envBatch.readTextFile(outputPath + "CAB_"+testCase+".csv").distinct().collect();
-        List<String> resultBCA = envBatch.readTextFile(outputPath + "BCA_"+testCase+".csv").distinct().collect();
-        List<String> resultCBA = envBatch.readTextFile(outputPath + "CBA_"+testCase+".csv").distinct().collect();
+        List<String> resultABC = envBatch.readTextFile(outputPath + "ABC_" + testCase + ".csv").distinct().collect();
+        List<String> resultBAC = envBatch.readTextFile(outputPath + "BAC_" + testCase + ".csv").distinct().collect();
+        List<String> resultACB = envBatch.readTextFile(outputPath + "ACB_" + testCase + ".csv").distinct().collect();
+        List<String> resultCAB = envBatch.readTextFile(outputPath + "CAB_" + testCase + ".csv").distinct().collect();
+        List<String> resultBCA = envBatch.readTextFile(outputPath + "BCA_" + testCase + ".csv").distinct().collect();
+        List<String> resultCBA = envBatch.readTextFile(outputPath + "CBA_" + testCase + ".csv").distinct().collect();
 
         // Compare the results
         assertEquals(resultABC.size(), resultBAC.size());
-        assertEquals(resultABC,resultBAC);
+        assertEquals(resultABC, resultBAC);
         assertEquals(resultABC.size(), resultCAB.size());
-        assertEquals(resultABC,resultCAB);
+        assertEquals(resultABC, resultCAB);
         assertEquals(resultABC.size(), resultACB.size());
-        assertEquals(resultABC,resultACB);
-        assertNotEquals(resultABC,resultBCA);
-        assertNotEquals(resultABC,resultCBA);
+        assertEquals(resultABC, resultACB);
+        assertNotEquals(resultABC, resultBCA);
+        assertNotEquals(resultABC, resultCBA);
     }
 
-     @Test
+    @Test
     //Case A2 W1=W2, s >= l
-    public void testCaseA2() throws Exception {
+    public void CaseA2() throws Exception {
         // Set up the testing environment
         w1Size = 10;
         w1Slide = 15;
@@ -141,68 +141,69 @@ public class JoinReorderingTest_2wayJoin_QnV {
         timePropagation = "A";
         String testCase = "A2";
         // Execute each join operation
-         //default case
-         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC =
-                 new SWJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
-         // this is commutative it works without any 'magic' akka default
-         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBAC =
-                 new SWJ_ab_BAC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
-         // this works via time Propagation of a.ts by default
-         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamACB =
-                 new SWJ_ac_AC_w2_B_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
-         // consequently via commutativity this one also
-         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamCAB =
-                 new SWJ_ac_CA_w2_B_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
-        //and for s > l it works simply like this
-         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA =
-                 new SWJ_bc_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
-         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamCBA =
-                 new SWJ_bc_CB_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        //default case
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC =
+                new SWJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        // default commutative combination
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBAC =
+                new SWJ_BAC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        // associative pairs
+        // this works via time Propagation of a.ts by default
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamACB =
+                new SWJ_AC_w2_B_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        // consequently via commutativity this permutation also
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamCAB =
+                new SWJ_CA_w2_B_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        //and for s > l it works because window length is equivalent
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA =
+                new SWJ_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamCBA =
+                new SWJ_CB_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
 
 
-         String outputPath = "./src/main/resources/resultSWJ_";
-         // Collect the results into lists
-         streamABC
-                 .writeAsText(outputPath + "ABC_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
-         streamBAC
-                 .writeAsText(outputPath + "BAC_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
-         streamACB
-                 .writeAsText(outputPath + "ACB_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
-         streamCAB
-                 .writeAsText(outputPath + "CAB_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
-         streamBCA
-                 .writeAsText(outputPath + "BCA_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
-         streamCBA
-                 .writeAsText(outputPath + "CBA_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        String outputPath = "./src/main/resources/result_SWJ_";
+        // Collect the results into lists
+        streamABC
+                .writeAsText(outputPath + "ABC_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        streamBAC
+                .writeAsText(outputPath + "BAC_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        streamACB
+                .writeAsText(outputPath + "ACB_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        streamCAB
+                .writeAsText(outputPath + "CAB_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        streamBCA
+                .writeAsText(outputPath + "BCA_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        streamCBA
+                .writeAsText(outputPath + "CBA_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
 
-         env.execute();
+        env.execute();
 
-         final ExecutionEnvironment envBatch = ExecutionEnvironment.getExecutionEnvironment();
-         envBatch.setParallelism(1);
+        final ExecutionEnvironment envBatch = ExecutionEnvironment.getExecutionEnvironment();
+        envBatch.setParallelism(1);
 
-         List<String> resultABC = envBatch.readTextFile(outputPath + "ABC_"+testCase+".csv").distinct().collect();
-         List<String> resultBAC = envBatch.readTextFile(outputPath + "BAC_"+testCase+".csv").distinct().collect();
-         List<String> resultACB = envBatch.readTextFile(outputPath + "ACB_"+testCase+".csv").distinct().collect();
-         List<String> resultCAB = envBatch.readTextFile(outputPath + "CAB_"+testCase+".csv").distinct().collect();
-         List<String> resultBCA = envBatch.readTextFile(outputPath + "BCA_"+testCase+".csv").distinct().collect();
-         List<String> resultCBA = envBatch.readTextFile(outputPath + "CBA_"+testCase+".csv").distinct().collect();
+        List<String> resultABC = envBatch.readTextFile(outputPath + "ABC_" + testCase + ".csv").distinct().collect();
+        List<String> resultBAC = envBatch.readTextFile(outputPath + "BAC_" + testCase + ".csv").distinct().collect();
+        List<String> resultACB = envBatch.readTextFile(outputPath + "ACB_" + testCase + ".csv").distinct().collect();
+        List<String> resultCAB = envBatch.readTextFile(outputPath + "CAB_" + testCase + ".csv").distinct().collect();
+        List<String> resultBCA = envBatch.readTextFile(outputPath + "BCA_" + testCase + ".csv").distinct().collect();
+        List<String> resultCBA = envBatch.readTextFile(outputPath + "CBA_" + testCase + ".csv").distinct().collect();
 
-         // Compare the results
-         assertEquals(resultABC.size(), resultBAC.size());
-         assertEquals(resultABC,resultBAC);
-         assertEquals(resultABC.size(), resultCAB.size());
-         assertEquals(resultABC,resultCAB);
-         assertEquals(resultABC.size(), resultACB.size());
-         assertEquals(resultABC,resultACB);
-         assertEquals(resultABC.size(), resultBCA.size());
-         assertEquals(resultABC,resultBCA);
-         assertEquals(resultABC.size(), resultCBA.size());
-         assertEquals(resultABC,resultCBA);
+        // Compare the results
+        assertEquals(resultABC.size(), resultBAC.size());
+        assertEquals(resultABC, resultBAC);
+        assertEquals(resultABC.size(), resultCAB.size());
+        assertEquals(resultABC, resultCAB);
+        assertEquals(resultABC.size(), resultACB.size());
+        assertEquals(resultABC, resultACB);
+        assertEquals(resultABC.size(), resultBCA.size());
+        assertEquals(resultABC, resultBCA);
+        assertEquals(resultABC.size(), resultCBA.size());
+        assertEquals(resultABC, resultCBA);
     }
 
     @Test
     //Case A3 W1.l != W2.l, slide < size
-    public void testCaseA3_w1_geq_w2() throws Exception {
+    public void CaseA3_w1_geq_w2() throws Exception {
         // Set up the testing environment
         w1Size = 15;
         w1Slide = 5;
@@ -213,64 +214,65 @@ public class JoinReorderingTest_2wayJoin_QnV {
         // Execute each join operation
         //default case
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC =
-                new SWJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
-        // this is commutative it works without any 'magic' akka default
+                new SWJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        // default commutative combination
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBAC =
-                new SWJ_ab_BAC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_BAC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        // associative permutations
         // this works via time Propagation of a.ts by default
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamACB =
-                new SWJ_ac_AC_w2_B_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
-        // consequently via commutativity this one also
+                new SWJ_AC_w2_B_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        // consequently via commutativity this permutation also
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamCAB =
-                new SWJ_ac_CA_w2_B_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
-        // same problem as in A! there b and c can be so far appart that they do not occur together in a window
+                new SWJ_CA_w2_B_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        // same problem as in A1 there b and c can be so far apart that they do not occur together in a window
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA =
-                new SWJ_bc_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamCBA =
-                new SWJ_bc_CB_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_CB_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
 
 
-        String outputPath = "./src/main/resources/resultSWJ_";
+        String outputPath = "./src/main/resources/result_SWJ_";
         // Collect the results into lists
         streamABC
-                .writeAsText(outputPath + "ABC_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+                .writeAsText(outputPath + "ABC_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
         streamBAC
-                .writeAsText(outputPath + "BAC_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+                .writeAsText(outputPath + "BAC_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
         streamACB
-                .writeAsText(outputPath + "ACB_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+                .writeAsText(outputPath + "ACB_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
         streamCAB
-                .writeAsText(outputPath + "CAB_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+                .writeAsText(outputPath + "CAB_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
         streamBCA
-                .writeAsText(outputPath + "BCA_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+                .writeAsText(outputPath + "BCA_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
         streamCBA
-                .writeAsText(outputPath + "CBA_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+                .writeAsText(outputPath + "CBA_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
 
         env.execute();
 
         final ExecutionEnvironment envBatch = ExecutionEnvironment.getExecutionEnvironment();
         envBatch.setParallelism(1);
 
-        List<String> resultABC = envBatch.readTextFile(outputPath + "ABC_"+testCase+".csv").distinct().collect();
-        List<String> resultBAC = envBatch.readTextFile(outputPath + "BAC_"+testCase+".csv").distinct().collect();
-        List<String> resultACB = envBatch.readTextFile(outputPath + "ACB_"+testCase+".csv").distinct().collect();
-        List<String> resultCAB = envBatch.readTextFile(outputPath + "CAB_"+testCase+".csv").distinct().collect();
-        List<String> resultBCA = envBatch.readTextFile(outputPath + "BCA_"+testCase+".csv").distinct().collect();
-        List<String> resultCBA = envBatch.readTextFile(outputPath + "CBA_"+testCase+".csv").distinct().collect();
+        List<String> resultABC = envBatch.readTextFile(outputPath + "ABC_" + testCase + ".csv").distinct().collect();
+        List<String> resultBAC = envBatch.readTextFile(outputPath + "BAC_" + testCase + ".csv").distinct().collect();
+        List<String> resultACB = envBatch.readTextFile(outputPath + "ACB_" + testCase + ".csv").distinct().collect();
+        List<String> resultCAB = envBatch.readTextFile(outputPath + "CAB_" + testCase + ".csv").distinct().collect();
+        List<String> resultBCA = envBatch.readTextFile(outputPath + "BCA_" + testCase + ".csv").distinct().collect();
+        List<String> resultCBA = envBatch.readTextFile(outputPath + "CBA_" + testCase + ".csv").distinct().collect();
 
         // Compare the results
         assertEquals(resultABC.size(), resultBAC.size());
-        assertEquals(resultABC,resultBAC);
+        assertEquals(resultABC, resultBAC);
         assertEquals(resultABC.size(), resultCAB.size());
-        assertEquals(resultABC,resultCAB);
+        assertEquals(resultABC, resultCAB);
         assertEquals(resultABC.size(), resultACB.size());
-        assertEquals(resultABC,resultACB);
-        assertNotEquals(resultABC,resultBCA);
-        assertNotEquals(resultABC,resultCBA);
+        assertEquals(resultABC, resultACB);
+        assertNotEquals(resultABC, resultBCA);
+        assertNotEquals(resultABC, resultCBA);
     }
 
     @Test
     //Case A3 W1.l != W2.l, slide < size
-    public void testCaseA3_w1_lt_w2() throws Exception {
+    public void CaseA3_w1_lt_w2() throws Exception {
         // Set up the testing environment
         w1Size = 10;
         w1Slide = 5;
@@ -281,64 +283,64 @@ public class JoinReorderingTest_2wayJoin_QnV {
         // Execute each join operation
         //default case
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC =
-                new SWJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
-        // this is commutative it works without any 'magic' akka default
+                new SWJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        // default commutative combination
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBAC =
-                new SWJ_ab_BAC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_BAC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        // associative
         // this works via time Propagation of a.ts by default
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamACB =
-                new SWJ_ac_AC_w2_B_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
-        // consequently via commutativity this one also
+                new SWJ_AC_w2_B_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        // consequently via commutativity this permutation also
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamCAB =
-                new SWJ_ac_CA_w2_B_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
-        // same problem as in A! there b and c can be so far apart that they do not occur together in a window
+                new SWJ_CA_w2_B_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        // same problem as in A1 there b and c can be so far apart that they do not occur together in a window
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA =
-                new SWJ_bc_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamCBA =
-                new SWJ_bc_CB_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_CB_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
 
-
-        String outputPath = "./src/main/resources/resultSWJ_";
+        String outputPath = "./src/main/resources/result_SWJ_";
         // Collect the results into lists
         streamABC
-                .writeAsText(outputPath + "ABC_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+                .writeAsText(outputPath + "ABC_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
         streamBAC
-                .writeAsText(outputPath + "BAC_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+                .writeAsText(outputPath + "BAC_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
         streamACB
-                .writeAsText(outputPath + "ACB_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+                .writeAsText(outputPath + "ACB_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
         streamCAB
-                .writeAsText(outputPath + "CAB_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+                .writeAsText(outputPath + "CAB_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
         streamBCA
-                .writeAsText(outputPath + "BCA_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+                .writeAsText(outputPath + "BCA_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
         streamCBA
-                .writeAsText(outputPath + "CBA_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+                .writeAsText(outputPath + "CBA_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
 
         env.execute();
 
         final ExecutionEnvironment envBatch = ExecutionEnvironment.getExecutionEnvironment();
         envBatch.setParallelism(1);
 
-        List<String> resultABC = envBatch.readTextFile(outputPath + "ABC_"+testCase+".csv").distinct().collect();
-        List<String> resultBAC = envBatch.readTextFile(outputPath + "BAC_"+testCase+".csv").distinct().collect();
-        List<String> resultACB = envBatch.readTextFile(outputPath + "ACB_"+testCase+".csv").distinct().collect();
-        List<String> resultCAB = envBatch.readTextFile(outputPath + "CAB_"+testCase+".csv").distinct().collect();
-        List<String> resultBCA = envBatch.readTextFile(outputPath + "BCA_"+testCase+".csv").distinct().collect();
-        List<String> resultCBA = envBatch.readTextFile(outputPath + "CBA_"+testCase+".csv").distinct().collect();
+        List<String> resultABC = envBatch.readTextFile(outputPath + "ABC_" + testCase + ".csv").distinct().collect();
+        List<String> resultBAC = envBatch.readTextFile(outputPath + "BAC_" + testCase + ".csv").distinct().collect();
+        List<String> resultACB = envBatch.readTextFile(outputPath + "ACB_" + testCase + ".csv").distinct().collect();
+        List<String> resultCAB = envBatch.readTextFile(outputPath + "CAB_" + testCase + ".csv").distinct().collect();
+        List<String> resultBCA = envBatch.readTextFile(outputPath + "BCA_" + testCase + ".csv").distinct().collect();
+        List<String> resultCBA = envBatch.readTextFile(outputPath + "CBA_" + testCase + ".csv").distinct().collect();
 
         // Compare the results
         assertEquals(resultABC.size(), resultBAC.size());
-        assertEquals(resultABC,resultBAC);
+        assertEquals(resultABC, resultBAC);
         assertEquals(resultABC.size(), resultCAB.size());
-        assertEquals(resultABC,resultCAB);
+        assertEquals(resultABC, resultCAB);
         assertEquals(resultABC.size(), resultACB.size());
-        assertEquals(resultABC,resultACB);
-        assertNotEquals(resultABC,resultBCA);
-        assertNotEquals(resultABC,resultCBA);
+        assertEquals(resultABC, resultACB);
+        assertNotEquals(resultABC, resultBCA);
+        assertNotEquals(resultABC, resultCBA);
     }
 
-   @Test
-    //Case A4, s >= l, W1.l != W2.l
-    public void testCaseA4_w1_geq_w2() throws Exception {
+    @Test
+    //Case A4, s >= l, W1.l != W2.l, divider relationship
+    public void CaseA4_w1_geq_w2() throws Exception {
         // Set up the testing environment
         w1Size = 20;
         w1Slide = 30;
@@ -346,70 +348,74 @@ public class JoinReorderingTest_2wayJoin_QnV {
         w2Slide = 30;
         timePropagation = "A";
         String testCase = "A4_w1_geq_w2";
-       // Execute each join operation
-       //default case
-       DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC =
-               new SWJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
-       // this is commutative it works without any 'magic' akka default
-       DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBAC =
-               new SWJ_ab_BAC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
-       // this works via time Propagation of a.ts by default
-       DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamACB =
-               new SWJ_ac_AC_w2_B_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
-       // consequently via commutativity this one also
-       DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamCAB =
-               new SWJ_ac_CA_w2_B_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
-       // same problem as in A! there b and c can be so far apart that they do not occur together in a window
-       timePropagation = "C";
-       DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA =
-               new SWJ_bc_BC_w1_A_w2(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
-       DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamCBA =
-               new SWJ_bc_CB_w1_A_w2(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        // Execute each join operation
+        //default case
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC =
+                new SWJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        // default commutative combination
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBAC =
+                new SWJ_BAC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        // associative
+        // this works via time Propagation of a.ts by default
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamACB =
+                new SWJ_AC_w2_B_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        // consequently via commutativity this permutation also
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamCAB =
+                new SWJ_CA_w2_B_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        /** if w1.l > w2.l and the first join does not contain the propagated timestamp, we use the largest window in the first join
+         *  and  propagate the timestamp of the smallest to the second join, i.e., w2 is the window of the second join and is between A and C so
+         *  we propagate C  from the first join BC
+         */
+        timePropagation = "C";
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA =
+                new SWJ_bc_BC_w1_A_w2(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamCBA =
+                new SWJ_bc_CB_w1_A_w2(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
 
 
-       String outputPath = "./src/main/resources/resultSWJ_";
-       // Collect the results into lists
-       streamABC
-               .writeAsText(outputPath + "ABC_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
-       streamBAC
-               .writeAsText(outputPath + "BAC_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
-       streamACB
-               .writeAsText(outputPath + "ACB_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
-       streamCAB
-               .writeAsText(outputPath + "CAB_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
-       streamBCA
-               .writeAsText(outputPath + "BCA_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
-       streamCBA
-               .writeAsText(outputPath + "CBA_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        String outputPath = "./src/main/resources/result_SWJ_";
+        // Collect the results into lists
+        streamABC
+                .writeAsText(outputPath + "ABC_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        streamBAC
+                .writeAsText(outputPath + "BAC_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        streamACB
+                .writeAsText(outputPath + "ACB_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        streamCAB
+                .writeAsText(outputPath + "CAB_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        streamBCA
+                .writeAsText(outputPath + "BCA_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        streamCBA
+                .writeAsText(outputPath + "CBA_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
 
-       env.execute();
+        env.execute();
 
-       final ExecutionEnvironment envBatch = ExecutionEnvironment.getExecutionEnvironment();
-       envBatch.setParallelism(1);
+        final ExecutionEnvironment envBatch = ExecutionEnvironment.getExecutionEnvironment();
+        envBatch.setParallelism(1);
 
-       List<String> resultABC = envBatch.readTextFile(outputPath + "ABC_"+testCase+".csv").distinct().collect();
-       List<String> resultBAC = envBatch.readTextFile(outputPath + "BAC_"+testCase+".csv").distinct().collect();
-       List<String> resultACB = envBatch.readTextFile(outputPath + "ACB_"+testCase+".csv").distinct().collect();
-       List<String> resultCAB = envBatch.readTextFile(outputPath + "CAB_"+testCase+".csv").distinct().collect();
-       List<String> resultBCA = envBatch.readTextFile(outputPath + "BCA_"+testCase+".csv").distinct().collect();
-       List<String> resultCBA = envBatch.readTextFile(outputPath + "CBA_"+testCase+".csv").distinct().collect();
+        List<String> resultABC = envBatch.readTextFile(outputPath + "ABC_" + testCase + ".csv").distinct().collect();
+        List<String> resultBAC = envBatch.readTextFile(outputPath + "BAC_" + testCase + ".csv").distinct().collect();
+        List<String> resultACB = envBatch.readTextFile(outputPath + "ACB_" + testCase + ".csv").distinct().collect();
+        List<String> resultCAB = envBatch.readTextFile(outputPath + "CAB_" + testCase + ".csv").distinct().collect();
+        List<String> resultBCA = envBatch.readTextFile(outputPath + "BCA_" + testCase + ".csv").distinct().collect();
+        List<String> resultCBA = envBatch.readTextFile(outputPath + "CBA_" + testCase + ".csv").distinct().collect();
 
-       // Compare the results
-       assertEquals(resultABC.size(), resultBAC.size());
-       assertEquals(resultABC,resultBAC);
-       assertEquals(resultABC.size(), resultCAB.size());
-       assertEquals(resultABC,resultCAB);
-       assertEquals(resultABC.size(), resultACB.size());
-       assertEquals(resultABC,resultACB);
-       assertEquals(resultABC.size(), resultBCA.size());
-       assertEquals(resultABC,resultBCA);
-       assertEquals(resultABC.size(), resultCBA.size());
-       assertEquals(resultABC,resultCBA);
+        // Compare the results
+        assertEquals(resultABC.size(), resultBAC.size());
+        assertEquals(resultABC, resultBAC);
+        assertEquals(resultABC.size(), resultCAB.size());
+        assertEquals(resultABC, resultCAB);
+        assertEquals(resultABC.size(), resultACB.size());
+        assertEquals(resultABC, resultACB);
+        assertEquals(resultABC.size(), resultBCA.size());
+        assertEquals(resultABC, resultBCA);
+        assertEquals(resultABC.size(), resultCBA.size());
+        assertEquals(resultABC, resultCBA);
     }
 
     @Test
-    //Case A4 W1!=W2, s >= l, W1.l != W2.l && W1.s == W2.s
-    public void testCaseA4_w1_lt_w2() throws Exception {
+    //Case A4 W1!=W2, s >= l, W1.l != W2.l && W1.s == W2.s, divider relationship
+    public void CaseA4_w1_lt_w2() throws Exception {
         // Set up the testing environment
         w1Size = 5;
         w1Slide = 30;
@@ -420,158 +426,100 @@ public class JoinReorderingTest_2wayJoin_QnV {
         // Execute each join operation
         //default case
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC =
-                new SWJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
-        // this is commutative it works without any 'magic' akka default
+                new SWJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        // default commutative combination
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBAC =
-                new SWJ_ab_BAC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_BAC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        // associative pairs
         // this works via time Propagation of a.ts by default
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamACB =
-                new SWJ_ac_AC_w2_B_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
-        // consequently via commutativity this one also
+                new SWJ_AC_w2_B_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        // consequently via commutativity this permutation also
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamCAB =
-                new SWJ_ac_CA_w2_B_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
-        // same problem as in A! there b and c can be so far apart that they do not occur together in a window
-        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA =
-                new SWJ_bc_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
-        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamCBA =
-                new SWJ_bc_CB_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
-
-
-        String outputPath = "./src/main/resources/resultSWJ_";
-        // Collect the results into lists
-        streamABC
-                .writeAsText(outputPath + "ABC_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
-        streamBAC
-                .writeAsText(outputPath + "BAC_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
-        streamACB
-                .writeAsText(outputPath + "ACB_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
-        streamCAB
-                .writeAsText(outputPath + "CAB_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
-        streamBCA
-                .writeAsText(outputPath + "BCA_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
-        streamCBA
-                .writeAsText(outputPath + "CBA_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
-
-        env.execute();
-
-        final ExecutionEnvironment envBatch = ExecutionEnvironment.getExecutionEnvironment();
-        envBatch.setParallelism(1);
-
-        List<String> resultABC = envBatch.readTextFile(outputPath + "ABC_"+testCase+".csv").distinct().collect();
-        List<String> resultBAC = envBatch.readTextFile(outputPath + "BAC_"+testCase+".csv").distinct().collect();
-        List<String> resultACB = envBatch.readTextFile(outputPath + "ACB_"+testCase+".csv").distinct().collect();
-        List<String> resultCAB = envBatch.readTextFile(outputPath + "CAB_"+testCase+".csv").distinct().collect();
-        List<String> resultBCA = envBatch.readTextFile(outputPath + "BCA_"+testCase+".csv").distinct().collect();
-        List<String> resultCBA = envBatch.readTextFile(outputPath + "CBA_"+testCase+".csv").distinct().collect();
-
-        // Compare the results
-        assertEquals(resultABC.size(), resultBAC.size());
-        assertEquals(resultABC,resultBAC);
-        assertEquals(resultABC.size(), resultACB.size());
-        assertEquals(resultABC,resultACB);
-        assertEquals(resultABC.size(), resultCAB.size());
-        assertEquals(resultABC,resultCAB);
-        assertEquals(resultABC.size(), resultBCA.size());
-        assertEquals(resultABC,resultBCA);
-        assertEquals(resultABC.size(), resultCBA.size());
-        assertEquals(resultABC,resultCBA);
-    }
-
-    @Test
-    //Case A5: Session Windows
-    public void testCaseA5() throws Exception {
-        w1Size = 3;
-        w2Size = 3;
+                new SWJ_CA_w2_B_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        /** if w1.l < w2.l and the first join does not contain the propagated timestamp, we use the largest window in the first join
+         *  and  propagate the timestamp of the smallest to the second join, i.e., w1 is the second join and is between A and B so
+         *  we propagate B from the first join BC
+         */
         timePropagation = "B";
-        String testCase = "A5";
-        // Execute each join operation
-        //default case
-        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC =
-                new SeWJ_ab_ABC(streamA, streamB, streamC, w1Size, w2Size, timePropagation).run();
-        // this is commutative it works without any 'magic' akka default
-        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBAC =
-                new SeWJ_ab_BAC(streamA, streamB, streamC, w1Size, w2Size, timePropagation).run();
-        // this works via time Propagation of a.ts by default
-        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamACB =
-                new SeWJ_ac_ACB(streamA, streamB, streamC, w1Size, w2Size, timePropagation).run();
-        // consequently via commutativity this one also
-        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamCAB =
-                new SeWJ_ac_CAB(streamA, streamB, streamC, w1Size, w2Size, timePropagation).run();
-        // same problem as in A! there b and c can be so far apart that they do not occur together in a window
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA =
-                new SeWJ_bc_BCA(streamA, streamB, streamC, w1Size, w2Size, timePropagation).run();
+                new SWJ_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamCBA =
-                new SeWJ_bc_CBA(streamA, streamB, streamC, w1Size, w2Size, timePropagation).run();
+                new SWJ_CB_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
 
-        String outputPath = "./src/main/resources/resultSeWJ_";
+
+        String outputPath = "./src/main/resources/result_SWJ_";
         // Collect the results into lists
         streamABC
-                .writeAsText(outputPath + "ABC_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+                .writeAsText(outputPath + "ABC_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
         streamBAC
-                .writeAsText(outputPath + "BAC_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+                .writeAsText(outputPath + "BAC_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
         streamACB
-                .writeAsText(outputPath + "ACB_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+                .writeAsText(outputPath + "ACB_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
         streamCAB
-                .writeAsText(outputPath + "CAB_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+                .writeAsText(outputPath + "CAB_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
         streamBCA
-                .writeAsText(outputPath + "BCA_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+                .writeAsText(outputPath + "BCA_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
         streamCBA
-                .writeAsText(outputPath + "CBA_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+                .writeAsText(outputPath + "CBA_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
 
         env.execute();
 
         final ExecutionEnvironment envBatch = ExecutionEnvironment.getExecutionEnvironment();
         envBatch.setParallelism(1);
 
-        List<String> resultABC = envBatch.readTextFile(outputPath + "ABC_"+testCase+".csv").distinct().collect();
-        List<String> resultBAC = envBatch.readTextFile(outputPath + "BAC_"+testCase+".csv").distinct().collect();
-        List<String> resultACB = envBatch.readTextFile(outputPath + "ACB_"+testCase+".csv").distinct().collect();
-        List<String> resultCAB = envBatch.readTextFile(outputPath + "CAB_"+testCase+".csv").distinct().collect();
-        List<String> resultBCA = envBatch.readTextFile(outputPath + "BCA_"+testCase+".csv").distinct().collect();
-        List<String> resultCBA = envBatch.readTextFile(outputPath + "CBA_"+testCase+".csv").distinct().collect();
+        List<String> resultABC = envBatch.readTextFile(outputPath + "ABC_" + testCase + ".csv").distinct().collect();
+        List<String> resultBAC = envBatch.readTextFile(outputPath + "BAC_" + testCase + ".csv").distinct().collect();
+        List<String> resultACB = envBatch.readTextFile(outputPath + "ACB_" + testCase + ".csv").distinct().collect();
+        List<String> resultCAB = envBatch.readTextFile(outputPath + "CAB_" + testCase + ".csv").distinct().collect();
+        List<String> resultBCA = envBatch.readTextFile(outputPath + "BCA_" + testCase + ".csv").distinct().collect();
+        List<String> resultCBA = envBatch.readTextFile(outputPath + "CBA_" + testCase + ".csv").distinct().collect();
 
         // Compare the results
         assertEquals(resultABC.size(), resultBAC.size());
-        assertEquals(resultABC,resultBAC);
-        assertNotEquals(resultABC,resultACB);
-        assertEquals(resultCAB,resultACB);
-        assertNotEquals(resultABC,resultCAB);
-        assertNotEquals(resultABC,resultBCA);
-        assertNotEquals(resultABC,resultCBA);
-        assertEquals(resultCBA,resultBCA);
+        assertEquals(resultABC, resultBAC);
+        assertEquals(resultABC.size(), resultACB.size());
+        assertEquals(resultABC, resultACB);
+        assertEquals(resultABC.size(), resultCAB.size());
+        assertEquals(resultABC, resultCAB);
+        assertEquals(resultABC.size(), resultBCA.size());
+        assertEquals(resultABC, resultBCA);
+        assertEquals(resultABC.size(), resultCBA.size());
+        assertEquals(resultABC, resultCBA);
     }
 
     @Test
     //Case A6 IVJ lB = uB
-    public void testCaseA6() throws Exception {
+    public void CaseA6() throws Exception {
         // Set up the testing environment
         w1Size = -10; // lB W1
         w1Slide = 10; // uB W1
-        w2Size = -10; // lB W1
-        w2Slide = 10; // uB W1
+        w2Size = -10; // lB W2
+        w2Slide = 10; // uB W2
 
         timePropagation = "A";
         String testCase = "A6";
         // Execute each join operation with timestamp of A
         //default case
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC =
-                new IVJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
-        // this is commutative it works without any 'magic' akka default
+                new IVJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        // default commutative combination
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBAC =
-                new IVJ_ab_BAC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new IVJ_BAC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        //associative combinations
         // this works via time Propagation of a.ts by default
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamACB =
-                new IVJ_ac_ACB(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
-        // consequently via commutativity this one also
+                new IVJ_ACB(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        // consequently via commutativity its permutation also
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamCAB =
-                new IVJ_ac_CAB(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
-        // same problem as in A! there b and c can be so far apart that they do not occur together in a window
+                new IVJ_CAB(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        // same problem as in A1, b and c can be so far apart that they do not occur together in a window
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA =
-                new IVJ_bc_BCA(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
-     DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamCBA =
-                new IVJ_bc_CBA(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new IVJ_BCA(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamCBA =
+                new IVJ_CBA(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
 
-        String outputPath = "./src/main/resources/resultSeWJ_";
+        String outputPath = "./src/main/resources/result_IVJ_";
         // Collect the results into lists
         streamABC
                 .writeAsText(outputPath + "ABC_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
@@ -608,9 +556,10 @@ public class JoinReorderingTest_2wayJoin_QnV {
         assertNotEquals(resultABC, resultBCA);
         assertNotEquals(resultABC, resultCBA);
     }
+
     @Test
-    //Case A6 IVJ lB = uB
-    public void testCaseA6_w1_neq_w2() throws Exception {
+    //Case A6 IVJ lB = uB, but W1 is not equal W2
+    public void CaseA6_w1_neq_w2() throws Exception {
         // Set up the testing environment
         w1Size = -5; // lB W1
         w1Slide = 5; // uB W1
@@ -622,23 +571,24 @@ public class JoinReorderingTest_2wayJoin_QnV {
         // Execute each join operation with timestamp of A
         //default case
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC =
-                new IVJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
-        // this is commutative it works without any 'magic' akka default
+                new IVJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        // default commutative combination
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBAC =
-                new IVJ_ab_BAC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new IVJ_BAC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        //associative permutations
         // this works via time Propagation of a.ts by default
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamACB =
-                new IVJ_ac_ACB(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
-        // consequently via commutativity this one also
+                new IVJ_ACB(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        // consequently via commutativity this permutation also
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamCAB =
-                new IVJ_ac_CAB(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new IVJ_CAB(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         // same problem as in A! there b and c can be so far apart that they do not occur together in a window
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA =
-                new IVJ_bc_BCA(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new IVJ_BCA(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamCBA =
-                new IVJ_bc_CBA(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new IVJ_CBA(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
 
-        String outputPath = "./src/main/resources/resultSeWJ_";
+        String outputPath = "./src/main/resources/result_IVJ_";
         // Collect the results into lists
         streamABC
                 .writeAsText(outputPath + "ABC_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
@@ -675,36 +625,39 @@ public class JoinReorderingTest_2wayJoin_QnV {
         assertNotEquals(resultABC, resultBCA);
         assertNotEquals(resultABC, resultCBA);
     }
+
     @Test
     //Case A6 IVJ lB = uB
-    public void testCaseA7_w1() throws Exception {
+    public void CaseA7_w1_diff_bounds() throws Exception {
         // Set up the testing environment
         w1Size = -10; // lB W1
         w1Slide = 5; // uB W1
-        w2Size = -20; // lB W1
-        w2Slide = 20; // uB W1
+        w2Size = -20; // lB W2
+        w2Slide = 20; // uB W2
 
         timePropagation = "A";
         String testCase = "A7";
         // Execute each join operation with timestamp of A
         //default case
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC =
-                new IVJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new IVJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        // for BA instead of AB boundary swap of W1
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBAC =
-                new IVJ_ab_BAC(streamA, streamB, streamC, -w1Slide, -w1Size, w2Size, w2Slide, timePropagation).run();
-        // this works via time Propagation of a.ts by default
+                new IVJ_BAC(streamA, streamB, streamC, -w1Slide, -w1Size, w2Size, w2Slide, timePropagation).run();
+        // this works via time Propagation of a.ts by default, right order of streams
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamACB =
-                new IVJ_ac_ACB(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
-        // consequently via commutativity this one also
+                new IVJ_ACB(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        // consequently via commutativity this permutation also, W2 is a IVJ with equal-sized bounds so no boundary swap is required
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamCAB =
-                new IVJ_ac_CAB(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
-        // same problem as in A! there b and c can be so far apart that they do not occur together in a window
+                new IVJ_CAB(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        // same problem as in A1 there b and c can be so far apart that they do not occur together in a window, i.e.,
+        // there is no clear window assignment between BC
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA =
-                new IVJ_bc_BCA(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new IVJ_BCA(streamA, streamB, streamC, -w1Slide, -w1Size, -w2Slide, -w2Size, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamCBA =
-                new IVJ_bc_CBA(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new IVJ_CBA(streamA, streamB, streamC, -w1Slide, -w1Size, -w2Slide, -w2Size, timePropagation).run();
 
-        String outputPath = "./src/main/resources/resultSeWJ_";
+        String outputPath = "./src/main/resources/result_IVJ_";
         // Collect the results into lists
         streamABC
                 .writeAsText(outputPath + "ABC_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
@@ -744,34 +697,36 @@ public class JoinReorderingTest_2wayJoin_QnV {
 
     @Test
     //Case A6 IVJ lB = uB
-    public void testCaseA7_w2() throws Exception {
+    public void CaseA7_w2_diff_bounds() throws Exception {
         // Set up the testing environment
         w1Size = -10; // lB W1
         w1Slide = 10; // uB W1
-        w2Size = -10; // lB W1
-        w2Slide = 20; // uB W1
+        w2Size = -10; // lB W2
+        w2Slide = 20; // uB W2
 
         timePropagation = "A";
         String testCase = "A7";
         // Execute each join operation with timestamp of A
         //default case
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC =
-                new IVJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new IVJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        // commutative pair works, as W1 has equal bounds
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBAC =
-                new IVJ_ab_BAC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new IVJ_BAC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        // associative permutations
         // this works via time Propagation of a.ts by default
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamACB =
-                new IVJ_ac_ACB(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
-        // consequently via commutativity this one also
+                new IVJ_ACB(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        // consequently via commutativity this permutation with boundary swap
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamCAB =
-                new IVJ_ac_CAB(streamA, streamB, streamC, w1Size, w1Slide, -w2Slide, -w2Size, timePropagation).run();
-        // same problem as in A! there b and c can be so far apart that they do not occur together in a window
+                new IVJ_CAB(streamA, streamB, streamC, w1Size, w1Slide, -w2Slide, -w2Size, timePropagation).run();
+        // same problem as in A1 there b and c can be so far apart that they do not occur together in a window
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA =
-                new IVJ_bc_BCA(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new IVJ_BCA(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamCBA =
-                new IVJ_bc_CBA(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new IVJ_CBA(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
 
-        String outputPath = "./src/main/resources/resultSeWJ_";
+        String outputPath = "./src/main/resources/result_IVJ_";
         // Collect the results into lists
         streamABC
                 .writeAsText(outputPath + "ABC_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
@@ -811,34 +766,34 @@ public class JoinReorderingTest_2wayJoin_QnV {
 
     @Test
     //Case A6 IVJ lB = uB
-    public void testCaseA7_w1_and_w2() throws Exception {
+    public void CaseA7_w1_and_w2_diff_boundaries() throws Exception {
         // Set up the testing environment
         w1Size = -5; // lB W1
         w1Slide = 10; // uB W1
-        w2Size = -10; // lB W1
-        w2Slide = 20; // uB W1
+        w2Size = -10; // lB W2
+        w2Slide = 20; // uB W2
 
         timePropagation = "A";
         String testCase = "A7";
         // Execute each join operation with timestamp of A
         //default case
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC =
-                new IVJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new IVJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBAC =
-                new IVJ_ab_BAC(streamA, streamB, streamC, -w1Slide, -w1Size, w2Size, w2Slide, timePropagation).run();
+                new IVJ_BAC(streamA, streamB, streamC, -w1Slide, -w1Size, w2Size, w2Slide, timePropagation).run();
         // this works via time Propagation of a.ts by default
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamACB =
-                new IVJ_ac_ACB(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
-        // consequently via commutativity this one also
+                new IVJ_ACB(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        // consequently via commutativity this permutation also
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamCAB =
-                new IVJ_ac_CAB(streamA, streamB, streamC, w1Size, w1Slide, -w2Slide, -w2Size, timePropagation).run();
-        // same problem as in A! there b and c can be so far apart that they do not occur together in a window
+                new IVJ_CAB(streamA, streamB, streamC, w1Size, w1Slide, -w2Slide, -w2Size, timePropagation).run();
+        // same problem as in A1 there b and c can be so far apart that they do not occur together in a window
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA =
-                new IVJ_bc_BCA(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new IVJ_BCA(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamCBA =
-                new IVJ_bc_CBA(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new IVJ_CBA(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
 
-        String outputPath = "./src/main/resources/resultSeWJ_";
+        String outputPath = "./src/main/resources/result_IVJ_";
         // Collect the results into lists
         streamABC
                 .writeAsText(outputPath + "ABC_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
@@ -877,11 +832,11 @@ public class JoinReorderingTest_2wayJoin_QnV {
     }
 
     @Test
-    //Test Case with mixed windows
-    public void testMixedWindow() throws Exception {
+    //Test Case Mixed windows
+    public void CaseA3A4_MixedWindow() throws Exception {
         // Set up the testing environment
         w1Size = 60; // SWJ(60,30)
-        w1Slide = 30; //
+        w1Slide = 30; // u
         w2Size = 5; // TW(5)
         w2Slide = 5; //
 
@@ -890,58 +845,58 @@ public class JoinReorderingTest_2wayJoin_QnV {
         // Execute each join operation with timestamp of A
         //default case
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABC =
-                new SWJ_ab_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
-        // this is commutative it works without any 'magic' akka default
+                new SWJ_ABC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        // default commutative combination
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBAC =
-                new SWJ_ab_BAC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_BAC(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         // this works via time Propagation of a.ts by default
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamACB =
-                new SWJ_ac_AC_w2_B_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
-        // consequently via commutativity this one also
+                new SWJ_AC_w2_B_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+        // consequently via commutativity this permutation also
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamCAB =
-                new SWJ_ac_CA_w2_B_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_CA_w2_B_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         // and then these two cases that never work because b and c could be to far apart from each other
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBCA =
-                new SWJ_bc_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_BC_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
         DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamCBA =
-                new SWJ_bc_CB_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
+                new SWJ_CB_w2_A_w1(streamA, streamB, streamC, w1Size, w1Slide, w2Size, w2Slide, timePropagation).run();
 
 
-        String outputPath = "./src/main/resources/resultSWJ_";
+        String outputPath = "./src/main/resources/result_SWJ_";
         // Collect the results into lists
         streamABC
-                .writeAsText(outputPath + "ABC_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+                .writeAsText(outputPath + "ABC_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
         streamBAC
-                .writeAsText(outputPath + "BAC_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+                .writeAsText(outputPath + "BAC_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
         streamACB
-                .writeAsText(outputPath + "ACB_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+                .writeAsText(outputPath + "ACB_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
         streamCAB
-                .writeAsText(outputPath + "CAB_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+                .writeAsText(outputPath + "CAB_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
         streamBCA
-                .writeAsText(outputPath + "BCA_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+                .writeAsText(outputPath + "BCA_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
         streamCBA
-                .writeAsText(outputPath + "CBA_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+                .writeAsText(outputPath + "CBA_" + testCase + ".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
 
         env.execute();
 
         final ExecutionEnvironment envBatch = ExecutionEnvironment.getExecutionEnvironment();
         envBatch.setParallelism(1);
 
-        List<String> resultABC = envBatch.readTextFile(outputPath + "ABC_"+testCase+".csv").distinct().collect();
-        List<String> resultBAC = envBatch.readTextFile(outputPath + "BAC_"+testCase+".csv").distinct().collect();
-        List<String> resultACB = envBatch.readTextFile(outputPath + "ACB_"+testCase+".csv").distinct().collect();
-        List<String> resultCAB = envBatch.readTextFile(outputPath + "CAB_"+testCase+".csv").distinct().collect();
-        List<String> resultBCA = envBatch.readTextFile(outputPath + "BCA_"+testCase+".csv").distinct().collect();
-        List<String> resultCBA = envBatch.readTextFile(outputPath + "CBA_"+testCase+".csv").distinct().collect();
+        List<String> resultABC = envBatch.readTextFile(outputPath + "ABC_" + testCase + ".csv").distinct().collect();
+        List<String> resultBAC = envBatch.readTextFile(outputPath + "BAC_" + testCase + ".csv").distinct().collect();
+        List<String> resultACB = envBatch.readTextFile(outputPath + "ACB_" + testCase + ".csv").distinct().collect();
+        List<String> resultCAB = envBatch.readTextFile(outputPath + "CAB_" + testCase + ".csv").distinct().collect();
+        List<String> resultBCA = envBatch.readTextFile(outputPath + "BCA_" + testCase + ".csv").distinct().collect();
+        List<String> resultCBA = envBatch.readTextFile(outputPath + "CBA_" + testCase + ".csv").distinct().collect();
 
         // Compare the results
         assertEquals(resultABC.size(), resultBAC.size());
-        assertEquals(resultABC,resultBAC);
+        assertEquals(resultABC, resultBAC);
         assertEquals(resultABC.size(), resultCAB.size());
-        assertEquals(resultABC,resultCAB);
+        assertEquals(resultABC, resultCAB);
         assertEquals(resultABC.size(), resultACB.size());
-        assertEquals(resultABC,resultACB);
-        assertNotEquals(resultABC,resultBCA);
-        assertNotEquals(resultABC,resultCBA);
+        assertEquals(resultABC, resultACB);
+        assertNotEquals(resultABC, resultBCA);
+        assertNotEquals(resultABC, resultCBA);
     }
 }

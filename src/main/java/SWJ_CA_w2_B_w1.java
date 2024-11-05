@@ -8,15 +8,12 @@ import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.util.Collector;
 import util.UDFs;
 
-import static java.lang.Math.max;
-
 /**
- * This class runs a Sliding Window Join Query with the order [[A X C]^w2 x C]^w1 and returns the stream ABC.
- * parameters:
- * timePropagation: The timestamp (either 'A' or 'C') that is used for the stream AC in [AC x B]^w1
+ * This class runs a Sliding Window Join Query with the order [[C X A]^w2 x B]^w1 and returns the stream ABC.
+ * timePropagation: The timestamp (either 'A' or 'C') that is used for the stream CA in [CA x B]^w1
  */
 
-public class SWJ_ac_AC_w2_B_w1 {
+public class SWJ_CA_w2_B_w1 {
     DataStream<Tuple3<Integer, Integer, Long>> streamC;
     DataStream<Tuple3<Integer, Integer, Long>> streamA;
     DataStream<Tuple3<Integer, Integer, Long>> streamB;
@@ -27,7 +24,7 @@ public class SWJ_ac_AC_w2_B_w1 {
     String timePropagation;
 
 
-    public SWJ_ac_AC_w2_B_w1(DataStream<Tuple3<Integer, Integer, Long>> streamA, DataStream<Tuple3<Integer, Integer, Long>> streamB, DataStream<Tuple3<Integer, Integer, Long>> streamC, int w1Size, int w1Slide, int w2Size, int w2Slide, String timePropagation) {
+    public SWJ_CA_w2_B_w1(DataStream<Tuple3<Integer, Integer, Long>> streamA, DataStream<Tuple3<Integer, Integer, Long>> streamB, DataStream<Tuple3<Integer, Integer, Long>> streamC, int w1Size, int w1Slide, int w2Size, int w2Slide, String timePropagation) {
         this.streamA = streamA;
         this.streamB = streamB;
         this.streamC = streamC;
@@ -41,13 +38,13 @@ public class SWJ_ac_AC_w2_B_w1 {
     public DataStream<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> run() {
 
         // join A C
-        DataStream<Tuple6<Integer, Integer, Long, Integer, Integer, Long>> streamAC = streamA.join(streamC)
+        DataStream<Tuple6<Integer, Integer, Long, Integer, Integer, Long>> streamAC = streamC.join(streamA)
                 .where(new UDFs.getKeyT3())
                 .equalTo(new UDFs.getKeyT3())
                 .window(SlidingEventTimeWindows.of(Time.minutes(w2Size), Time.minutes(w2Slide)))
                 .apply(new FlatJoinFunction<Tuple3<Integer, Integer, Long>, Tuple3<Integer, Integer, Long>, Tuple6<Integer, Integer, Long, Integer, Integer, Long>>() {
                     @Override
-                    public void join(Tuple3<Integer, Integer, Long> d1, Tuple3<Integer, Integer, Long> d2, Collector<Tuple6<Integer, Integer, Long, Integer, Integer, Long>> collector) throws Exception {
+                    public void join(Tuple3<Integer, Integer, Long> d2, Tuple3<Integer, Integer, Long> d1, Collector<Tuple6<Integer, Integer, Long, Integer, Integer, Long>> collector) throws Exception {
                         collector.collect(new Tuple6<>(d1.f0, d1.f1, d1.f2, d2.f0, d2.f1, d2.f2));
                     }
                 }).assignTimestampsAndWatermarks(new UDFs.ExtractTimestampAC(60000, timePropagation));
