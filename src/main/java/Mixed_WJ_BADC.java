@@ -11,13 +11,13 @@ import org.apache.flink.util.Collector;
 import util.UDFs;
 
 /**
- * This class runs a Mixed Window Join Query with the order [[[A X B]^w1 x D]^w3 x D]^w2 and returns the stream ABCD.
+ * This class runs a Mixed Window Join Query with the order [[[B X A]^w1 x D]^w3 x C]^w2 and returns the stream ABCD.
  * assumption: default query
  * parameters:
- * timePropagation: to match the original query we know have to propagate B for AB and A for ABD
+ * timePropagation: we propagate timestamp B for AB and A for ABD
  */
 
-public class Mixed_WJ_ABDC {
+public class Mixed_WJ_BADC {
     DataStream<Tuple3<Integer, Integer, Long>> streamC;
     DataStream<Tuple3<Integer, Integer, Long>> streamA;
     DataStream<Tuple3<Integer, Integer, Long>> streamB;
@@ -32,7 +32,7 @@ public class Mixed_WJ_ABDC {
     String timePropagation2;
 
 
-    public Mixed_WJ_ABDC(DataStream<Tuple3<Integer, Integer, Long>> streamA, DataStream<Tuple3<Integer, Integer, Long>> streamB, DataStream<Tuple3<Integer, Integer, Long>> streamC, DataStream<Tuple3<Integer, Integer, Long>> streamD, int w1Size, int w1Slide, int w2Size, int w2Slide, int w3Size, int w3Slide, String timePropagation1, String timePropagation2) {
+    public Mixed_WJ_BADC(DataStream<Tuple3<Integer, Integer, Long>> streamA, DataStream<Tuple3<Integer, Integer, Long>> streamB, DataStream<Tuple3<Integer, Integer, Long>> streamC, DataStream<Tuple3<Integer, Integer, Long>> streamD, int w1Size, int w1Slide, int w2Size, int w2Slide, int w3Size, int w3Slide, String timePropagation1, String timePropagation2) {
         this.streamA = streamA;
         this.streamB = streamB;
         this.streamC = streamC;
@@ -49,13 +49,13 @@ public class Mixed_WJ_ABDC {
 
     public DataStream<Tuple12<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> run() {
         // join A B
-        DataStream<Tuple6<Integer, Integer, Long, Integer, Integer, Long>> streamAB = streamA.join(streamB)
+        DataStream<Tuple6<Integer, Integer, Long, Integer, Integer, Long>> streamAB = streamB.join(streamA)
                 .where(new UDFs.getKeyT3())
                 .equalTo(new UDFs.getKeyT3())
                 .window(SlidingEventTimeWindows.of(Time.minutes(w1Size), Time.minutes(w1Slide)))
                 .apply(new FlatJoinFunction<Tuple3<Integer, Integer, Long>, Tuple3<Integer, Integer, Long>, Tuple6<Integer, Integer, Long, Integer, Integer, Long>>() {
                     @Override
-                    public void join(Tuple3<Integer, Integer, Long> d1, Tuple3<Integer, Integer, Long> d2, Collector<Tuple6<Integer, Integer, Long, Integer, Integer, Long>> collector) throws Exception {
+                    public void join(Tuple3<Integer, Integer, Long> d2, Tuple3<Integer, Integer, Long> d1, Collector<Tuple6<Integer, Integer, Long, Integer, Integer, Long>> collector) throws Exception {
                         collector.collect(new Tuple6<>(d1.f0, d1.f1, d1.f2, d2.f0, d2.f1, d2.f2));
                     }
                 }).assignTimestampsAndWatermarks(new UDFs.ExtractTimestampAB(60000, timePropagation2));
@@ -65,6 +65,7 @@ public class Mixed_WJ_ABDC {
                 .equalTo(new UDFs.getKeyT3())
                 .window(SlidingEventTimeWindows.of(Time.minutes(w3Size), Time.minutes(w3Slide)))
                 .apply(new FlatJoinFunction<Tuple6<Integer, Integer, Long, Integer, Integer, Long>, Tuple3<Integer, Integer, Long>, Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>>() {
+
                     public void join(Tuple6<Integer, Integer, Long, Integer, Integer, Long> d1, Tuple3<Integer, Integer, Long> d2, Collector<Tuple9<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> collector) throws Exception {
                         collector.collect(new Tuple9<>(d1.f0, d1.f1, d1.f2, d1.f3, d1.f4, d1.f5, d2.f0, d2.f1, d2.f2));
                     }

@@ -1,7 +1,6 @@
 import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.java.tuple.Tuple12;
 import org.apache.flink.api.java.tuple.Tuple3;
-import org.apache.flink.api.java.tuple.Tuple9;
 import org.apache.flink.core.fs.FileSystem;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -15,7 +14,23 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
-public class JoinReorderingTest_3wayJoin {
+/**
+ * In this class we test a three-way Window Join with mixed windows, i.e., [[[A X B]^w1_A x C]^w2_B x D]^w3,
+ * where w1 is a SWJ creating overlapping windows, w2 is an IntervalJoin and, w3 is a non-overlapping SWJ
+ * Using our window assignment algorithms, we get the following window assignments:
+ * streams A, B, C, and D;
+ * windows: w_1, w_2, W_3,
+ * timestamp: W_2 : A, W_3 : B
+ *
+ * window_assignment:
+ * A:B : w_1
+ * A:C : w_2
+ * B:C : w_1,W_2
+ * B:D : W_3
+ * A:D : W_1,W_2,W_3
+ * C:D:  W_1,W_2,W_3
+ */
+public class JoinReorderingTest_3wayMixedWindowJoin {
 
     private StreamExecutionEnvironment env;
     private DataStream<Tuple3<Integer, Integer, Long>> streamA;
@@ -214,11 +229,10 @@ public class JoinReorderingTest_3wayJoin {
     }
 
     @Test
-    //Case A1: W1=W2, s < l
-    public void testABCD() throws Exception {
+    public void testMixedWindows() throws Exception {
         w1Size = 10;
         w1Slide = 5;
-        w2Size = -10;
+        w2Size = -3;
         w2Slide = 5;
         w3Size = 10;
         w3Slide = 10;
@@ -226,13 +240,22 @@ public class JoinReorderingTest_3wayJoin {
         timePropagation2 = "B";
         String testCase = "Mix";
         // Execute each join operation
-        //default case
+        //default case ABCD
         DataStream<Tuple12<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABCD =
                 new Mixed_WJ_ABCD(streamA, streamB, streamC, streamD, w1Size, w1Slide, w2Size, w2Slide, w3Size, w3Slide, timePropagation1, timePropagation2).run();
-
+        //join order ABDC
         DataStream<Tuple12<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABDC =
                 new Mixed_WJ_ABDC(streamA, streamB, streamC, streamD, w1Size, w1Slide, w2Size, w2Slide, w3Size, w3Slide, timePropagation1, timePropagation2).run();
-
+        //join order ABDC
+        DataStream<Tuple12<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamADCB =
+                new Mixed_WJ_ADCB(streamA, streamB, streamC, streamD, w1Size, w1Slide, w2Size, w2Slide, w3Size, w3Slide, timePropagation1, timePropagation2).run();
+        // join order B → A → D → C
+        DataStream<Tuple12<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBADC =
+                new Mixed_WJ_BADC(streamA, streamB, streamC, streamD, w1Size, w1Slide, w2Size, w2Slide, w3Size, w3Slide, timePropagation1, timePropagation2).run();
+        // join order B → D → C → A not possible as no valid window assignment for BD -> C
+        // join order B → D → A → C
+        DataStream<Tuple12<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBDAC =
+                new Mixed_WJ_BDAC(streamA, streamB, streamC, streamD, w1Size, w1Slide, w2Size, w2Slide, w3Size, w3Slide, timePropagation1, timePropagation2).run();
 
         String outputPath = "./src/main/resources/result_mixed_3_way_";
         // Collect the results into lists
@@ -240,6 +263,12 @@ public class JoinReorderingTest_3wayJoin {
                 .writeAsText(outputPath + "ABCD_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
         streamABDC
                 .writeAsText(outputPath + "ABDC_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        streamADCB
+                .writeAsText(outputPath + "ADCB_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        streamBADC
+                .writeAsText(outputPath + "BADC_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        streamBDAC
+                .writeAsText(outputPath + "BDAC_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
 
         env.execute();
 
@@ -248,17 +277,18 @@ public class JoinReorderingTest_3wayJoin {
 
         List<String> resultABCD = envBatch.readTextFile(outputPath + "ABCD_"+testCase+".csv").distinct().collect();
         List<String> resultABDC = envBatch.readTextFile(outputPath + "ABDC_"+testCase+".csv").distinct().collect();
+        List<String> resultADCB = envBatch.readTextFile(outputPath + "ADCB_"+testCase+".csv").distinct().collect();
+        List<String> resultBADC = envBatch.readTextFile(outputPath + "BADC_"+testCase+".csv").distinct().collect();
+        List<String> resultBDAC = envBatch.readTextFile(outputPath + "BDAC_"+testCase+".csv").distinct().collect();
 
         // Compare the results
         assertEquals(resultABCD.size(), resultABDC.size());
         assertEquals(resultABCD, resultABDC);
-        /**assertEquals(resultABC, resultBAC);
-        assertEquals(resultABC.size(), resultACB.size());
-        assertEquals(resultABC, resultACB);
-        assertEquals(resultABC.size(), resultCAB.size());
-        assertEquals(resultABC, resultCAB);
-        assertNotEquals(resultABC, resultBCA);
-        assertNotEquals(resultABC, resultCBA);*/
+        assertNotEquals(resultABCD.size(), resultADCB.size()); // ADCB has no explicit window assignment, and the list of possible window assignments does not contain multiple non-overlapping Sliding Window Joins
+        assertEquals(resultABCD.size(), resultBADC.size());
+        assertEquals(resultABCD, resultBADC);
+        assertEquals(resultABCD.size(), resultBDAC.size());
+        assertEquals(resultABCD, resultBDAC);
     }
 
 }

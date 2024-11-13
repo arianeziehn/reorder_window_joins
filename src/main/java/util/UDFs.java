@@ -106,6 +106,43 @@ public class UDFs {
         }
     }
 
+    public static class ExtractTimestampBD implements AssignerWithPeriodicWatermarks<Tuple6<Integer, Integer, Long, Integer, Integer, Long>> {
+        private static final long serialVersionUID = 1L;
+        private final long maxOutOfOrderness;
+
+        private String timePropagation;
+
+        private long currentMaxTimestamp;
+
+        public ExtractTimestampBD() {
+            this.maxOutOfOrderness = 0;
+        }
+
+        public ExtractTimestampBD(long periodMs, String timePropagation) {
+
+            this.maxOutOfOrderness = (periodMs);
+            this.timePropagation = timePropagation;
+        }
+
+        @Nullable
+        @Override
+        public Watermark getCurrentWatermark() {
+            return new Watermark(currentMaxTimestamp - maxOutOfOrderness);
+        }
+
+        @Override
+        public long extractTimestamp(Tuple6<Integer, Integer, Long, Integer, Integer, Long> element, long l) {
+            long timestamp = 0L;
+            if (timePropagation.equals("B")) {
+                timestamp = element.f2;
+            } else {
+                timestamp = element.f5; // automatically propagate last time stamp
+            }
+            currentMaxTimestamp = Math.max(timestamp, currentMaxTimestamp);
+            return timestamp;
+        }
+    }
+
     public static class ExtractTimestampAB_T7 implements AssignerWithPeriodicWatermarks<Tuple7<Integer, Integer, Long, Integer, Integer, Long, Long>> {
         private static final long serialVersionUID = 1L;
         private final long maxOutOfOrderness;
