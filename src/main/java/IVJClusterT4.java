@@ -29,13 +29,13 @@ public class IVJClusterT4 {
         int w1uB = parameters.getInt("w1uB", 20);
         int w2lB = -parameters.getInt("w2lB", 10);
         int w2uB = parameters.getInt("w2uB", 20);
-        long throughput = parameters.getLong("tput", 1000); //for me at least rather heavy already
-        int freqA = parameters.getInt("freqA", 1); // 1 tuples per minute that is how to play with selective
+        long throughput = parameters.getLong("tput", 1000);
+        int freqA = parameters.getInt("freqA", 1); // equals 1 tuples per event time minute that is how to play with selective, note that event time is just an artificial time
         int freqB = parameters.getInt("freqB", 1);
         int freqC = parameters.getInt("freqC", 1);
         int parallelism = parameters.getInt("para", 5);
-        int runtime = parameters.getInt("run", 25);
-        boolean filter = parameters.getBoolean("filter", false);
+        int runtime = parameters.getInt("run", 25); // the time the source runs
+        boolean filter = parameters.getBoolean("filter", false); // a positive Integer filter in the non-key attribute of the tuple to disrupt uniform distribution
         String joinOrder = parameters.get("order", "BAC");
         // 1 * 20 = 20 tuples per window per stream
         // 20*20 for window one * 20 for third window
@@ -43,13 +43,8 @@ public class IVJClusterT4 {
         long throughputA = (long) (throughput * ((double) (freqA) / (maxFreq)));
         long throughputB = (long) (throughput * ((double) (freqB) / (maxFreq)));
         long throughputC = (long) (throughput * ((double) (freqC) / (maxFreq)));
-        if (throughput <= 0){
-            System.out.println("Define logging throughput");
-            throughputA = 10000;
-            throughputB = 10000;
-            throughputC = 10000;
-        }
-        String timePropagation = parameters.get("tProp", "A");
+
+        String timePropagation = parameters.get("tProp", "A"); // the stream name for time propagation
 
         String outputPath;
         if (!parameters.has("output")) {
@@ -85,12 +80,10 @@ public class IVJClusterT4 {
 
             DataStream<Tuple7<Integer, Integer, Long, Integer, Integer, Long, Long>> streamAC;
             if (joinOrder.equals("CAB")) {
-                streamAC = new IVJ_BA_T4(streamC, streamA, -w2uB, -w2lB).run();
+                streamAC = new IVJ_BA_T4(streamC, streamA, -w2uB, -w2lB).run().assignTimestampsAndWatermarks(new UDFs.ExtractTimestampAR_T7(60000, timePropagation));
             } else {
-                streamAC = new IVJ_AB_T4(streamA, streamC, w2lB, w2uB).run();
+                streamAC = new IVJ_AB_T4(streamA, streamC, w2lB, w2uB).run().assignTimestampsAndWatermarks(new UDFs.ExtractTimestampAR_T7(60000, timePropagation));
             }
-
-            streamAC.assignTimestampsAndWatermarks(new UDFs.ExtractTimestampAR_T7(60000, timePropagation));
 
             DataStream<Tuple4<Integer, Integer, Long, Long>> streamB = env.addSource(new ArtificialSourceFunctionT4(throughputB, runtime, freqB, numberOfKeys))
                     .setParallelism(parallelism)
@@ -120,11 +113,10 @@ public class IVJClusterT4 {
             DataStream<Tuple7<Integer, Integer, Long, Integer, Integer, Long, Long>> streamAB;
 
             if (joinOrder.equals("BAC")) {
-                streamAB = new  IVJ_BA_T4(streamB, streamA, -w1uB, -w1lB).run();
+                streamAB = new  IVJ_BA_T4(streamB, streamA, -w1uB, -w1lB).run().assignTimestampsAndWatermarks(new UDFs.ExtractTimestampAR_T7(60000, timePropagation));
             } else {
-                streamAB = new IVJ_AB_T4(streamA, streamB, w1lB, w1uB).run();
+                streamAB = new IVJ_AB_T4(streamA, streamB, w1lB, w1uB).run().assignTimestampsAndWatermarks(new UDFs.ExtractTimestampAR_T7(60000, timePropagation));
             }
-            streamAB.assignTimestampsAndWatermarks(new UDFs.ExtractTimestampAR_T7(60000, timePropagation));
 
             DataStream<Tuple4<Integer, Integer, Long, Long>> streamC = env.addSource(new ArtificialSourceFunctionT4(throughputC, runtime, freqC, numberOfKeys))
                     .setParallelism(parallelism)

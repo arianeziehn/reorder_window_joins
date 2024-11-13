@@ -4,14 +4,14 @@ In this folder, we provide details about our Flink configurations (flink-conf.ya
 At the top of each script, you find a set of variables (i.e., paths) that need to be adjusted for your cluster.
 
 ## Queries
-For our queries, we exclusively use the entry classes **IVJClusterT4**, **MixedWindowT4**, and **SWJClusterT4**.
+For our queries, we exclusively use the entry classes **IVJClusterT4** for two-way Joins exclusively using Interval Joins, **MixedWindowT4** for two-way Joins using both Sliding Windows and Interval Joins, and **SWJClusterT4** for two-way Joins exclusively using Sliding Window Joins.
 All three classes incorporate all proposed features to create equivalent query plans for a two-way window join query
-$$[[A x B]^W1 x C ]^W1$$ where the order of interest have to be provided, e.g., -order ABC. 
+$$[[A x B]^{W_1} x C ]^{W_2}$$ where the order of interest have to be provided, e.g., -order ABC. 
 
 ## Maximal Sustainable Throughput
-We evaluate the maximal maintainable throughput in preliminary experiments (Note that this is an exploration process and you have to run each query and permutation separately). 
-Depending on your machines, you need to adjust the throughput's (i.e., the ingestion rate) several time, checking if latency does not constantly increase during execution and that 
-approximately the ingestion rate equals the result of the throughput logger, else that indicates that the sources are throttled due to 
+We evaluate the maximal sustainable throughput in preliminary experiments. Note that this is an exploration process, and you have to run each query and permutation separately to evaluate its throughput. 
+Depending on your machines, you need to adjust the throughput's (i.e., the ingestion rate) potentially several times. When latency does not constantly increase during execution and 
+the ingestion rate is approximately equals the result of the throughput logger the maximal sustainable throughput is identified. Otherwise, these metrics indicate that the sources are throttled due to 
 backpressure in the system. 
 A maximal sustainable throughput is the maximal throughput the system can reach without creating backpressure on the upstream operators of the execution pipeline.
 Thus, leading to a similar value for the ingestion rate and the maximal maintainable throughput. We exploratory identified the maximal maintainable throughput for each query and query using the ThroughputLogger in the util folder.
@@ -46,7 +46,7 @@ result_all[j,4] <- mean(dataAGG2$x)
 ``` 
 
 ## Micro Benchmarks
-We use the command line tool Dool [1] to monitor CPU und memory utilization in our scalability experiment. 
+We use the command line tool Dool [1] to monitor CPU und memory utilization during our performance evaluation. 
 
 [1] https://github.com/scottchiefbaker/dool
 
