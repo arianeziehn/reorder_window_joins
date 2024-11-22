@@ -138,7 +138,7 @@ public class JoinReorderingTest_3wayMixedWindowJoin {
                 new Tuple3<>(1, 3, (78*60000L)),
                 new Tuple3<>(1, 2, (80*60000L)),
                 new Tuple3<>(1, 3, (82*60000L))
-        ).assignTimestampsAndWatermarks(new UDFs.ExtractTimestamp(1000));
+        ).assignTimestampsAndWatermarks(new UDFs.ExtractTimestamp(6000));
 
         streamC = env.fromElements(
                 new Tuple3<>(1, 2, (1*60000L)),
@@ -181,7 +181,7 @@ public class JoinReorderingTest_3wayMixedWindowJoin {
                 new Tuple3<>(1, 3, (75*60000L)),
                 new Tuple3<>(1, 2, (77*60000L)),
                 new Tuple3<>(1, 3, (79*60000L))
-        ).assignTimestampsAndWatermarks(new UDFs.ExtractTimestamp(1000));
+        ).assignTimestampsAndWatermarks(new UDFs.ExtractTimestamp(6000));
 
         streamD = env.fromElements(
                 new Tuple3<>(1, 2, (2*60000L)),
@@ -225,7 +225,7 @@ public class JoinReorderingTest_3wayMixedWindowJoin {
                 new Tuple3<>(1, 3, (78*60000L)),
                 new Tuple3<>(1, 2, (80*60000L)),
                 new Tuple3<>(1, 3, (82*60000L))
-        ).assignTimestampsAndWatermarks(new UDFs.ExtractTimestamp(1000));
+        ).assignTimestampsAndWatermarks(new UDFs.ExtractTimestamp(6000));
     }
 
     @Test
@@ -240,22 +240,28 @@ public class JoinReorderingTest_3wayMixedWindowJoin {
         timePropagation2 = "B";
         String testCase = "Mix";
         // Execute each join operation
-        //default case ABCD
+        //default case ABCD - [[[A X B]^w1_A x C]^w2_B x D]^w3
         DataStream<Tuple12<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABCD =
                 new Mixed_WJ_ABCD(streamA, streamB, streamC, streamD, w1Size, w1Slide, w2Size, w2Slide, w3Size, w3Slide, timePropagation1, timePropagation2).run();
-        //join order ABDC
+        //join order ABDC - [[[A X B]^w1_B x D]^w3_A x D]^w2,
         DataStream<Tuple12<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamABDC =
                 new Mixed_WJ_ABDC(streamA, streamB, streamC, streamD, w1Size, w1Slide, w2Size, w2Slide, w3Size, w3Slide, timePropagation1, timePropagation2).run();
-        //join order ABDC
+        //join order ADCB - [[[A X D]^w1_A x C]^w2_D x B]^w3
         DataStream<Tuple12<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamADCB =
                 new Mixed_WJ_ADCB(streamA, streamB, streamC, streamD, w1Size, w1Slide, w2Size, w2Slide, w3Size, w3Slide, timePropagation1, timePropagation2).run();
-        // join order B → A → D → C
+        // join order B → A → D → C - [[[B X A]^w1_B x D]^w3_A x C]^w2
         DataStream<Tuple12<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBADC =
                 new Mixed_WJ_BADC(streamA, streamB, streamC, streamD, w1Size, w1Slide, w2Size, w2Slide, w3Size, w3Slide, timePropagation1, timePropagation2).run();
         // join order B → D → C → A not possible as no valid window assignment for BD -> C
-        // join order B → D → A → C
+        // join order B → D → A → C - [[[B X D]^w3_B x A]^w1_A x C]^w2
         DataStream<Tuple12<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBDAC =
                 new Mixed_WJ_BDAC(streamA, streamB, streamC, streamD, w1Size, w1Slide, w2Size, w2Slide, w3Size, w3Slide, timePropagation1, timePropagation2).run();
+        // join order A → C → B → D - [[[A X C]^w2_A x B]^w1_B x D]^w3
+        DataStream<Tuple12<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamACBD =
+                new Mixed_WJ_ACBD(streamA, streamB, streamC, streamD, w1Size, w1Slide, w2Size, w2Slide, w3Size, w3Slide, timePropagation1, timePropagation2).run();
+        // join order A → C → D → B - [[[A X C]^w2_A x D]^w3_B x B]^w1
+        DataStream<Tuple12<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamACDB =
+                new Mixed_WJ_ACDB(streamA, streamB, streamC, streamD, w1Size, w1Slide, w2Size, w2Slide, w3Size, w3Slide, timePropagation1, timePropagation2).run();
 
         String outputPath = "./src/main/resources/result_mixed_3_way_";
         // Collect the results into lists
@@ -269,6 +275,10 @@ public class JoinReorderingTest_3wayMixedWindowJoin {
                 .writeAsText(outputPath + "BADC_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
         streamBDAC
                 .writeAsText(outputPath + "BDAC_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        streamACBD
+                .writeAsText(outputPath + "ACBD_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        streamACDB
+                .writeAsText(outputPath + "ACDB_"+testCase+".csv", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
 
         env.execute();
 
@@ -280,15 +290,20 @@ public class JoinReorderingTest_3wayMixedWindowJoin {
         List<String> resultADCB = envBatch.readTextFile(outputPath + "ADCB_"+testCase+".csv").distinct().collect();
         List<String> resultBADC = envBatch.readTextFile(outputPath + "BADC_"+testCase+".csv").distinct().collect();
         List<String> resultBDAC = envBatch.readTextFile(outputPath + "BDAC_"+testCase+".csv").distinct().collect();
+        List<String> resultACBD = envBatch.readTextFile(outputPath + "ACBD_"+testCase+".csv").distinct().collect();
+        List<String> resultACDB = envBatch.readTextFile(outputPath + "ACDB_"+testCase+".csv").distinct().collect();
 
         // Compare the results
         assertEquals(resultABCD.size(), resultABDC.size());
         assertEquals(resultABCD, resultABDC);
-        assertNotEquals(resultABCD.size(), resultADCB.size()); // ADCB has no explicit window assignment, and the list of possible window assignments does not contain multiple non-overlapping Sliding Window Joins
+        assertNotEquals(resultABCD, resultADCB); // A x D has no explicit window assignment, and the list of possible window assignments does not contain multiple non-overlapping Sliding Window Joins
         assertEquals(resultABCD.size(), resultBADC.size());
         assertEquals(resultABCD, resultBADC);
         assertEquals(resultABCD.size(), resultBDAC.size());
         assertEquals(resultABCD, resultBDAC);
+        assertEquals(resultABCD.size(), resultACBD.size());
+        assertEquals(resultABCD, resultACBD);
+        assertNotEquals(resultABCD, resultACDB); // AC x D has no explicit window assignment, and the list of possible window assignments does not contain multiple non-overlapping Sliding Window Joins
     }
 
 }
