@@ -44,11 +44,9 @@ build/
 ### Mac OS ###
 .DS_Store
 
-/scripts&instructions/examples_previous_paper/*
-/scripts&instructions/scripts/ThroughputAnalysis
+/examples/
 /src/main/resources/QnV_large.csv
 /src/main/resources/QnV70_73.csv
-/DataAnalysis/
 /figures/
 /notes_and_todos/
 /scripts&instructions/scripts/

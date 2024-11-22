@@ -4,7 +4,7 @@ This repository provides the experimental setup, test cases, and data sources us
 
 Our work explores the commutativity and associativity properties of window joins under various conditions, and introduces transformation rules that enable reordering of multi-way window joins while preserving correctness. 
 The validation suite (see `src/test`) includes comprehensive JUnit test cases that demonstrate the effects of reordering for different window join types, and window configurations on completeness and correctness.
-The performance validation was performed on a cluster, using the queries provides on ` src/main` and the scripts available in `scripts&instructions`. 
+The performance validation was performed on a cluster, using the queries provided in ` src/main` and the scripts available in `scripts&instructions`. 
 
 ## Key Highlights
 Query Reordering Tests: We test the impact of join reordering on various types of window joins by executing permutations of the original join order, with a focus on preserving query semantics.
@@ -36,11 +36,11 @@ To run the performance validation:
 ### src/main/java
 Contains the join queries (Case Simulation (see src/test) and Performance Evaluation): 
 #### Sliding Window Joins (SWJs): 
-- SWJClusterT4, contains the code for the cluster evaluation, i.e., a two-way window join $$ [[A X B]^{w_1}_{a.ts} x C]^{w_2} $$ with time propagation of timestamp A between w1 and w2 including all its equivalent permutations for streams of tuples of size 4
+- SWJClusterT4, contains the code for the cluster evaluation, i.e., a two-way window join $$[[A X B]^{w_1}_{a.ts} x C]^{w_2}$$ with time propagation of timestamp A between w1 and w2 including all its equivalent permutations for streams of tuples of size 4
 #### Session Window Joins (SeWJs):
 - Case Simulation Only, as we identified that SeWJ are not associative
 #### IntervalJoin (IVJs) 
-- IVJClusterT4, contains the code for the cluster evaluation, i.e., a two-way window join $$ [[A X B]^{w_1}_{a.ts} x C]^{w_2} $$ with time propagation of timestamp A between w1 and w2 including all its equivalent permutations for streams of tuples of size 4
+- IVJClusterT4, contains the code for the cluster evaluation, i.e., a two-way window join $$[[A X B]^{w_1}_{a.ts} x C]^{w_2}$$ with time propagation of timestamp A between w1 and w2 including all its equivalent permutations for streams of tuples of size 4
 
 #### util
 Contains helper function for the join queries, e.g., assigner functions, the sources and loggers. 
