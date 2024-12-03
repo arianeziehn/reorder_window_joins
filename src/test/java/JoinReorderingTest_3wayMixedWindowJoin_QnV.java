@@ -114,7 +114,7 @@ public class JoinReorderingTest_3wayMixedWindowJoin_QnV {
         // join order B → A → D → C - [[[B X A]^w1_B x D]^w3_A x C]^w2
         DataStream<Tuple12<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBADC =
                 new Mixed_WJ_BADC(streamA, streamB, streamC, streamD, w1Size, w1Slide, w2Size, w2Slide, w3Size, w3Slide, timePropagation1, timePropagation2).run();
-        // join order B → D → C → A not possible as no valid window assignment for BD -> C
+        // join order B → D → C → A not possible as no valid window assignment for BD -> C, same yields for the join orders starting with BC (BCAD,BCDA)
         // join order B → D → A → C - [[[B X D]^w3_B x A]^w1_A x C]^w2
         DataStream<Tuple12<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long>> streamBDAC =
                 new Mixed_WJ_BDAC(streamA, streamB, streamC, streamD, w1Size, w1Slide, w2Size, w2Slide, w3Size, w3Slide, timePropagation1, timePropagation2).run();
