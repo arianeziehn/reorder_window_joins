@@ -1,33 +1,33 @@
 package util;
 
 import org.apache.flink.api.common.functions.RichFlatMapFunction;
-import org.apache.flink.api.java.tuple.Tuple10;
+import org.apache.flink.api.java.tuple.Tuple16;
 import org.apache.flink.util.Collector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This class logs the latency as average of all result tuples (Tuple10) received within a second
+ * This class logs the latency as average of all result tuples (Tuple16) received within a second
  */
 
-public class LatencyLoggerT10 extends RichFlatMapFunction<Tuple10<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long, Long>, String> {
+public class LatencyLoggerT16 extends RichFlatMapFunction<Tuple16<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long, Long>, String> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(LatencyLoggerT10.class);
+    private static final Logger LOG = LoggerFactory.getLogger(LatencyLoggerT16.class);
     private long totalLatencySum = 0;
     private long matchedPatternsCount = 0;
     private long lastLogTimeMs = -1;
     private boolean logPerTuple = false; //enables logging per tuple
 
-    public LatencyLoggerT10() {
+    public LatencyLoggerT16() {
     }
 
-    public LatencyLoggerT10(boolean logPerTuple) {
+    public LatencyLoggerT16(boolean logPerTuple) {
         this.logPerTuple = logPerTuple;
     }
 
     @Override
-    public void flatMap(Tuple10<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long, Long> dp, Collector<String> collector) throws Exception {
-        Long last_timestamp = dp.f9;
+    public void flatMap(Tuple16<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long, Long> dp, Collector<String> collector) throws Exception {
+        Long last_timestamp = dp.f15;
         String mes = log_latency(last_timestamp);
         if (!mes.equals("")) collector.collect(mes);
     }
