@@ -50,6 +50,7 @@ public class SWJClusterT4_5Streams {
         long throughputC = (long) (throughput * ((double) (freqC) / (maxFreq)));
         long throughputD = (long) (throughput * ((double) (freqD) / (maxFreq)));
         long throughputE = (long) (throughput * ((double) (freqE) / (maxFreq)));
+        boolean filter = parameters.getBoolean("filter", true); // a positive Integer filter in the non-key attribute of the tuple to disrupt uniform distribution
 
         String timePropagation = parameters.get("tProp", "B"); // the stream name for time propagation
 
@@ -80,6 +81,11 @@ public class SWJClusterT4_5Streams {
             streamA.flatMap(new ThroughputLogger<Tuple4<Integer, Integer, Long, Long>>(ArtificialSourceFunctionT4.RECORD_SIZE_IN_BYTE, throughputA));
             streamB.flatMap(new ThroughputLogger<Tuple4<Integer, Integer, Long, Long>>(ArtificialSourceFunctionT4.RECORD_SIZE_IN_BYTE, throughputB));
 
+            if (filter) {
+                streamA = streamA.filter(new UDFs.filterPosIntT4());
+                streamB = streamB.filter(new UDFs.filterPosIntT4());
+            }
+
             DataStream<Tuple7<Integer, Integer, Long, Integer, Integer, Long, Long>> streamAB = new SWJ_AR_T4(streamA, streamB, w1Size, w1Slide).run()
                     .assignTimestampsAndWatermarks(new UDFs.ExtractTimestampAR_T7(60000, timePropagation));
 
@@ -88,6 +94,10 @@ public class SWJClusterT4_5Streams {
                     .assignTimestampsAndWatermarks(new UDFs.ExtractTimestamp_T4(60000));
 
             streamC.flatMap(new ThroughputLogger<Tuple4<Integer, Integer, Long, Long>>(ArtificialSourceFunctionT4.RECORD_SIZE_IN_BYTE, throughputC));
+
+            if (filter) {
+                streamC = streamC.filter(new UDFs.filterPosIntT4());
+            }
 
             DataStream<Tuple10<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long, Long>> streamABC = new SWJ_AC_T7(streamAB, streamC, w2Size, w2Slide).run()
                     .assignTimestampsAndWatermarks(new UDFs.ExtractTimestampAR_T10(60000, timePropagation));
@@ -98,6 +108,10 @@ public class SWJClusterT4_5Streams {
 
             streamD.flatMap(new ThroughputLogger<Tuple4<Integer, Integer, Long, Long>>(ArtificialSourceFunctionT4.RECORD_SIZE_IN_BYTE, throughputD));
 
+            if (filter) {
+                streamD = streamD.filter(new UDFs.filterPosIntT4());
+            }
+
             DataStream<Tuple13<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long, Long>> streamABCD = new SWJ_AC_T10(streamABC, streamD, w3Size, w3Slide).run()
                     .assignTimestampsAndWatermarks(new UDFs.ExtractTimestampAR_T13(60000, timePropagation));
 
@@ -106,6 +120,10 @@ public class SWJClusterT4_5Streams {
                     .assignTimestampsAndWatermarks(new UDFs.ExtractTimestamp_T4(60000));
 
             streamE.flatMap(new ThroughputLogger<Tuple4<Integer, Integer, Long, Long>>(ArtificialSourceFunctionT4.RECORD_SIZE_IN_BYTE, throughputE));
+
+            if (filter) {
+                streamE = streamE.filter(new UDFs.filterPosIntT4());
+            }
 
             resultStream = new SWJ_AC_T13(streamABCD, streamE, w4Size, w4Slide).run();
 
@@ -123,6 +141,11 @@ public class SWJClusterT4_5Streams {
             streamA.flatMap(new ThroughputLogger<Tuple4<Integer, Integer, Long, Long>>(ArtificialSourceFunctionT4.RECORD_SIZE_IN_BYTE, throughputA));
             streamB.flatMap(new ThroughputLogger<Tuple4<Integer, Integer, Long, Long>>(ArtificialSourceFunctionT4.RECORD_SIZE_IN_BYTE, throughputB));
 
+            if (filter) {
+                streamA = streamA.filter(new UDFs.filterPosIntT4());
+                streamB = streamB.filter(new UDFs.filterPosIntT4());
+            }
+
             DataStream<Tuple7<Integer, Integer, Long, Integer, Integer, Long, Long>> streamAB = new SWJ_AR_T4(streamA, streamB, w1Size, w1Slide).run()
                     .assignTimestampsAndWatermarks(new UDFs.ExtractTimestampAR_T7(60000, timePropagation));
 
@@ -131,6 +154,10 @@ public class SWJClusterT4_5Streams {
                     .assignTimestampsAndWatermarks(new UDFs.ExtractTimestamp_T4(60000));
 
             streamE.flatMap(new ThroughputLogger<Tuple4<Integer, Integer, Long, Long>>(ArtificialSourceFunctionT4.RECORD_SIZE_IN_BYTE, throughputE));
+
+            if (filter) {
+                streamE = streamE.filter(new UDFs.filterPosIntT4());
+            }
 
             DataStream<Tuple10<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long, Long>> streamABE = new SWJ_AC_T7(streamAB, streamE, w4Size, w4Slide).run()
                     .assignTimestampsAndWatermarks(new UDFs.ExtractTimestampAR_T10(60000, timePropagation));
@@ -141,6 +168,10 @@ public class SWJClusterT4_5Streams {
 
             streamC.flatMap(new ThroughputLogger<Tuple4<Integer, Integer, Long, Long>>(ArtificialSourceFunctionT4.RECORD_SIZE_IN_BYTE, throughputC));
 
+            if (filter) {
+                streamC = streamC.filter(new UDFs.filterPosIntT4());
+            }
+
             DataStream<Tuple13<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long, Long>> streamABCE = new SWJ_ABD_T10(streamABE, streamC, w2Size, w2Slide).run()
                     .assignTimestampsAndWatermarks(new UDFs.ExtractTimestampAR_T13(60000, timePropagation));
 
@@ -149,6 +180,10 @@ public class SWJClusterT4_5Streams {
                     .assignTimestampsAndWatermarks(new UDFs.ExtractTimestamp_T4(60000));
 
             streamD.flatMap(new ThroughputLogger<Tuple4<Integer, Integer, Long, Long>>(ArtificialSourceFunctionT4.RECORD_SIZE_IN_BYTE, throughputD));
+
+            if (filter) {
+                streamD = streamD.filter(new UDFs.filterPosIntT4());
+            }
 
             resultStream = new SWJ_ABCE_T13(streamABCE, streamD, w3Size, w3Slide).run();
 
@@ -165,6 +200,11 @@ public class SWJClusterT4_5Streams {
             streamD.flatMap(new ThroughputLogger<Tuple4<Integer, Integer, Long, Long>>(ArtificialSourceFunctionT4.RECORD_SIZE_IN_BYTE, throughputD));
             streamB.flatMap(new ThroughputLogger<Tuple4<Integer, Integer, Long, Long>>(ArtificialSourceFunctionT4.RECORD_SIZE_IN_BYTE, throughputB));
 
+            if (filter) {
+                streamD = streamD.filter(new UDFs.filterPosIntT4());
+                streamB = streamB.filter(new UDFs.filterPosIntT4());
+            }
+
             DataStream<Tuple7<Integer, Integer, Long, Integer, Integer, Long, Long>> streamBD = new SWJ_AR_T4(streamB, streamD, w3Size, w3Slide).run()
                     .assignTimestampsAndWatermarks(new UDFs.ExtractTimestampBR_T7(60000, timePropagation));
 
@@ -173,6 +213,10 @@ public class SWJClusterT4_5Streams {
                     .assignTimestampsAndWatermarks(new UDFs.ExtractTimestamp_T4(60000));
 
             streamC.flatMap(new ThroughputLogger<Tuple4<Integer, Integer, Long, Long>>(ArtificialSourceFunctionT4.RECORD_SIZE_IN_BYTE, throughputC));
+
+            if (filter) {
+                streamC = streamC.filter(new UDFs.filterPosIntT4());
+            }
 
             DataStream<Tuple10<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long, Long>> streamBCD = new SWJ_AB_T7(streamBD, streamC, w2Size, w2Slide).run()
                     .assignTimestampsAndWatermarks(new UDFs.ExtractTimestampBR_T10(60000, timePropagation));
@@ -183,6 +227,10 @@ public class SWJClusterT4_5Streams {
 
             streamA.flatMap(new ThroughputLogger<Tuple4<Integer, Integer, Long, Long>>(ArtificialSourceFunctionT4.RECORD_SIZE_IN_BYTE, throughputA));
 
+            if (filter) {
+                streamA = streamA.filter(new UDFs.filterPosIntT4());
+            }
+
             DataStream<Tuple13<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long, Long>> streamABCD = new SWJ_AR_T10(streamBCD, streamA, w1Size, w1Slide).run()
                     .assignTimestampsAndWatermarks(new UDFs.ExtractTimestampAR_T13(60000, timePropagation));
 
@@ -191,6 +239,10 @@ public class SWJClusterT4_5Streams {
                     .assignTimestampsAndWatermarks(new UDFs.ExtractTimestamp_T4(60000));
 
             streamE.flatMap(new ThroughputLogger<Tuple4<Integer, Integer, Long, Long>>(ArtificialSourceFunctionT4.RECORD_SIZE_IN_BYTE, throughputE));
+
+            if (filter) {
+                streamE = streamE.filter(new UDFs.filterPosIntT4());
+            }
 
             resultStream = new SWJ_AC_T13(streamABCD, streamE, w4Size, w4Slide).run();
 
@@ -208,6 +260,11 @@ public class SWJClusterT4_5Streams {
 
             streamB.flatMap(new ThroughputLogger<Tuple4<Integer, Integer, Long, Long>>(ArtificialSourceFunctionT4.RECORD_SIZE_IN_BYTE, throughputB));
 
+            if (filter) {
+                streamE = streamE.filter(new UDFs.filterPosIntT4());
+                streamB = streamB.filter(new UDFs.filterPosIntT4());
+            }
+
             DataStream<Tuple7<Integer, Integer, Long, Integer, Integer, Long, Long>> streamBE = new SWJ_AR_T4(streamB, streamE, w4Size, w4Slide).run()
                     .assignTimestampsAndWatermarks(new UDFs.ExtractTimestampBR_T7(60000, timePropagation));
 
@@ -216,6 +273,10 @@ public class SWJClusterT4_5Streams {
                     .assignTimestampsAndWatermarks(new UDFs.ExtractTimestamp_T4(60000)); // as we consider Minutes
 
             streamD.flatMap(new ThroughputLogger<Tuple4<Integer, Integer, Long, Long>>(ArtificialSourceFunctionT4.RECORD_SIZE_IN_BYTE, throughputD));
+
+            if (filter) {
+                streamD = streamD.filter(new UDFs.filterPosIntT4());
+            }
 
             DataStream<Tuple10<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long, Long>> streamBDE = new SWJ_AB_T7(streamBE, streamD, w3Size, w3Slide).run()
                     .assignTimestampsAndWatermarks(new UDFs.ExtractTimestampBR_T10(60000, timePropagation));
@@ -226,6 +287,10 @@ public class SWJClusterT4_5Streams {
 
             streamA.flatMap(new ThroughputLogger<Tuple4<Integer, Integer, Long, Long>>(ArtificialSourceFunctionT4.RECORD_SIZE_IN_BYTE, throughputA));
 
+            if (filter) {
+                streamA = streamA.filter(new UDFs.filterPosIntT4());
+            }
+
             DataStream<Tuple13<Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long, Integer, Integer, Long, Long>> streamABDE = new SWJ_AR_T10(streamBDE, streamA, w1Size, w1Slide).run()
                     .assignTimestampsAndWatermarks(new UDFs.ExtractTimestampAR_T13(60000, timePropagation));
 
@@ -234,6 +299,10 @@ public class SWJClusterT4_5Streams {
                     .assignTimestampsAndWatermarks(new UDFs.ExtractTimestamp_T4(60000));
 
             streamC.flatMap(new ThroughputLogger<Tuple4<Integer, Integer, Long, Long>>(ArtificialSourceFunctionT4.RECORD_SIZE_IN_BYTE, throughputC));
+
+            if (filter) {
+                streamC = streamC.filter(new UDFs.filterPosIntT4());
+            }
 
             resultStream = new SWJ_ABDE_T13(streamABDE, streamC, w2Size, w2Slide).run();
 
@@ -251,5 +320,4 @@ public class SWJClusterT4_5Streams {
         JobExecutionResult executionResult = env.execute("My Flink Job");
         System.out.println("The job took " + executionResult.getNetRuntime(TimeUnit.MILLISECONDS) + "ms to execute");
     }
-
 }

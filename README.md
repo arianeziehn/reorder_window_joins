@@ -14,7 +14,7 @@ Commutativity and Associativity Cases: Each case outlined in the paper, includin
 - `src/test`: Contains JUnit tests for each commutative and associative case, organized by window join type.
 
 Synthetic and Real-World Data: We use both synthetic streams and real-world sensor data to verify our transformation rules across a range of scenarios, while we use soly synthetic data for performance evaluation.
-- `src/main/resources`: Includes the samples of real-world datasets from QnV and AQ-Data.
+- `src/main/resources`: Includes the samples of real-world datasets (traffic congestion data and air quality measurements).
 - `src/main/java/util`: Contains our `artificalsourcefunctions` (T4 for cluster evaluation)
 
 ## Getting Started

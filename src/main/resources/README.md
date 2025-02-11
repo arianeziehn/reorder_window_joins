@@ -1,13 +1,13 @@
 # Data  
 
-We use two real-world datasets for our evaluation, QnV-Data and AirQuality-Data. Below, we introduce both data sources.
+We use two real-world datasets for our evaluation, traffic congestion data (QnV-Data) and AirQuality-Data. Below, we introduce both data sources.
 
-## QnV-Data 
+## Traffic Congestion Data (QnV-Data) 
 
 QnV-Data represents traffic congestion management
 data that includes sensor readings from almost 2.5k road segments
 in Hessen (Germany) with a frequency of one minute. Each tuple
-contains the number of cars, i.e., quantity (𝑄), and their average
+contains the number of vehicles, i.e., quantity (𝑄), and their average
 speed, i.e., velocity (𝑉), for one minute on a road segment. 
 
 ### Tuple: 
